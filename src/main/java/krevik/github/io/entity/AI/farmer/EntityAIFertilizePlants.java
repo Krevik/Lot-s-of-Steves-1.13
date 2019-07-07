@@ -12,7 +12,9 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBoneMeal;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -75,6 +77,7 @@ public class EntityAIFertilizePlants extends EntityAIBase {
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Items.BONE_MEAL,1));
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
@@ -83,16 +86,16 @@ public class EntityAIFertilizePlants extends EntityAIBase {
                         if(helper.isBoneMealInInventory(NPC)) {
                             ArrayList<ItemWithInventoryIndexEntry> bonemealEntries = helper.getBoneMealWithIndexesInInventory(NPC.getLocalInventory(), NPC);
                             if (!bonemealEntries.isEmpty()) {
-                                NPC.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Items.BONE_MEAL,1));
-                                NPC.swingArm(EnumHand.MAIN_HAND);
                                 ItemWithInventoryIndexEntry itemEntry = bonemealEntries.get(NPC.getRNG().nextInt(bonemealEntries.size()));
                                 if (world.isAirBlock(FertilizablePlants.get(0).up(2))) {
                                     if (world.isAirBlock(FertilizablePlants.get(0).up(3))) {
+                                        if(!world.isRemote){
+                                            world.playEvent(2005, FertilizablePlants.get(0).up(), 0);
+                                        }
                                         ((BlockCrops) world.getBlockState(FertilizablePlants.get(0).up()).getBlock()).grow(world, FertilizablePlants.get(0).up(), world.getBlockState(FertilizablePlants.get(0).up()));
                                         NPC.getLocalInventory().getStackInSlot(itemEntry.getInventoryIndex()).shrink(1);
                                     }
                                 }
-                                NPC.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
                             }
                         }
                     }
@@ -101,6 +104,7 @@ public class EntityAIFertilizePlants extends EntityAIBase {
                 destinationBlock=null;
                 pathTimer=0;
                 FertilizablePlants.remove(0);
+                NPC.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
             }
         }else{
             destinationBlock = FertilizablePlants.get(0);

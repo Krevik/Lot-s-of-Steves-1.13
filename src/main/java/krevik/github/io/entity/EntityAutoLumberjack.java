@@ -1,5 +1,8 @@
 package krevik.github.io.entity;
 
+import krevik.github.io.entity.AI.farmer.EntityAILookForSeeds;
+import krevik.github.io.entity.AI.lumberjack.EntityAIEquipTool;
+import krevik.github.io.entity.AI.lumberjack.EntityAILookForTools;
 import krevik.github.io.init.ModEntities;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityType;
@@ -42,7 +45,8 @@ public class EntityAutoLumberjack extends EntityAnimal {
 
     @Override
     protected void initEntityAI() {
-
+        tasks.addTask(5,new EntityAILookForTools(this));
+        tasks.addTask(5,new EntityAIEquipTool(this));
     }
 
     @Override

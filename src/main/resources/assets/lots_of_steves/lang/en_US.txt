@@ -1,0 +1,3 @@
+{
+  "lots_of_steves.auto_farmer_spawner": "Auto Farmer Spawner",
+}

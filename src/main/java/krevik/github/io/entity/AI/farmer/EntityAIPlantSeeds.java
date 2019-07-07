@@ -83,7 +83,6 @@ public class EntityAIPlantSeeds extends EntityAIBase {
                         if(!itemEntries.isEmpty()) {
                             ItemWithInventoryIndexEntry itemEntry = itemEntries.get(NPC.getRNG().nextInt(itemEntries.size()));
                             NPC.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(itemEntry.getItem()));
-                            NPC.swingArm(EnumHand.MAIN_HAND);
                             IBlockState stateToPlant = helper.getBlockStateToPlant(itemEntry.getItem());
                             if (world.isAirBlock(wetFarmlands.get(0).up())) {
                                 if (world.isAirBlock(wetFarmlands.get(0).up(2))) {

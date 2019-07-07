@@ -1,6 +1,8 @@
 package krevik.github.io.util;
 
 import krevik.github.io.entity.EntityAutoFarmer;
+import krevik.github.io.entity.EntityAutoLumberjack;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockBeetroot;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockFarmland;
@@ -11,8 +13,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemBoneMeal;
 import net.minecraft.tileentity.TileEntityChest;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -361,4 +365,66 @@ public class FunctionHelper {
 
     //--------------------------------------------------------FARMER END----------------------------------------------------
 
+    //--------------------------------------------------------LUMBERJACK START----------------------------------------------
+
+    public boolean areToolsInInventory(EntityAutoLumberjack npc){
+        boolean result=false;
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof ItemAxe){
+                    result=true;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ArrayList<BlockPos> getChestPosesWithTools(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result = new ArrayList<>();
+        int radius = npc.getWorkRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-radius;x<=radius;x++){
+            for(int y=-radius;y<=radius;y++){
+                for(int z=-radius;z<=radius;z++){
+                    BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck) != null){
+                        if(world.getTileEntity(toCheck) instanceof TileEntityChest){
+                            TileEntityChest chest = (TileEntityChest) world.getTileEntity(toCheck);
+                            for(int c=0;c<16;c++){
+                                if(!chest.getStackInSlot(c).isEmpty()){
+                                    if(chest.getStackInSlot(c).getItem() instanceof ItemAxe){
+                                        result.add(toCheck);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public boolean isToolEquipped(EntityAutoLumberjack npc){
+        boolean result=false;
+        if(npc.getHeldItem(EnumHand.MAIN_HAND).getItem() instanceof ItemAxe){
+            result=true;
+        }
+        return result;
+    }
+
+    public ArrayList<ItemWithInventoryIndexEntry> getAvailableToolsInInventory(EntityAutoLumberjack npc){
+        ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof ItemAxe){
+                    ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c);
+                    result.add(itemEntry);
+                }
+            }
+        }
+        return result;
+    }
 }
