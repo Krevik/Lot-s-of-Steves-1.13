@@ -1,0 +1,23 @@
+{
+  "type": "crafting_shaped",
+  "pattern": [
+"XAX","XBX","XCX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:oak_planks"
+    },
+    "A": {
+      "item": "minecraft:wheat_seeds"
+    },
+    "B": {
+      "item": "minecraft:carrot"
+    },
+	"C": {
+      "item": "minecraft:potato"
+    }
+  },
+  "result": {
+    "item": "lots_of_steves:auto_farmer_spawner"
+  }
+}

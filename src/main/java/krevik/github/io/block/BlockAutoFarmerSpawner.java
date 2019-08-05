@@ -2,14 +2,10 @@ package krevik.github.io.block;
 
 import krevik.github.io.entity.EntityAutoFarmer;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 public class BlockAutoFarmerSpawner extends Block {
@@ -18,12 +14,12 @@ public class BlockAutoFarmerSpawner extends Block {
     }
 
     @Override
-    public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         super.onBlockHarvested(worldIn,pos,state,player);
         if(!worldIn.isRemote()){
-            EntityLivingBase entity = new EntityAutoFarmer(worldIn);
+            LivingEntity entity = new EntityAutoFarmer(worldIn);
             entity.setPosition(pos.getX()+0.5f,pos.getY()+0.5f,pos.getZ()+0.5f);
-            worldIn.spawnEntity(entity);
+            worldIn.addEntity(entity);
         }
     }
 }

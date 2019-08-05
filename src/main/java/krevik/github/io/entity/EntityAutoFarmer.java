@@ -2,37 +2,37 @@ package krevik.github.io.entity;
 
 import krevik.github.io.entity.AI.farmer.*;
 import krevik.github.io.init.ModEntities;
-import net.minecraft.entity.*;
-import net.minecraft.entity.passive.EntityAnimal;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.entity.AgeableEntity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.INBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.DifficultyInstance;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class EntityAutoFarmer extends EntityAnimal {
+public class EntityAutoFarmer extends AnimalEntity {
 
-
-    private final InventoryBasic localInventory = new InventoryBasic(new TextComponentString("Items"), 64);
+    private final Inventory localInventory = new Inventory(64);
 
     private static int workRadius = 15;
     public EntityAutoFarmer(World p_i48576_2_) {
-        super(ModEntities.ENTITY_AUTO_FARMER, p_i48576_2_);
-        this.setSize(0.6F, 1.95F);
+        super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_AUTO_FARMER, p_i48576_2_);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
     }
 
+    public EntityAutoFarmer(EntityType<EntityAutoFarmer> entityAutoFarmerEntityType, World world) {
+        super(entityAutoFarmerEntityType, world);
+        setAIMoveSpeed(1f);
+        setCanPickUpLoot(false);
+    }
 
     @Override
-    public boolean canDespawn() {
+    public boolean canDespawn(double distanceToClosestPlayer) {
         return false;
     }
 
@@ -47,19 +47,14 @@ public class EntityAutoFarmer extends EntityAnimal {
     }
 
     @Override
-    protected void initEntityAI() {
-        tasks.addTask(5,new EntityAILookForSeeds(this));
-        tasks.addTask(5,new EntityAILookForBonemeal(this));
-        tasks.addTask(5,new EntityAIPlantSeeds(this));
-        tasks.addTask(6,new EntityAIFertilizePlants(this));
-        tasks.addTask(5,new EntityAIHarvestFarmland(this));
-        tasks.addTask(5,new EntityAICollectLoot(this));
-        tasks.addTask(6,new EntityAIDeliverExcessToChest(this));
-    }
-
-    @Override
-    public boolean processInteract(EntityPlayer p_184645_1_, EnumHand p_184645_2_) {
-        return super.processInteract(p_184645_1_, p_184645_2_);
+    protected void registerGoals() {
+        goalSelector.addGoal(5,new EntityAILookForSeeds(this));
+        goalSelector.addGoal(5,new EntityAILookForBonemeal(this));
+        goalSelector.addGoal(5,new EntityAIPlantSeeds(this));
+        goalSelector.addGoal(6,new EntityAIFertilizePlants(this));
+        goalSelector.addGoal(5,new EntityAIHarvestFarmland(this));
+        goalSelector.addGoal(5,new EntityAICollectLoot(this));
+        goalSelector.addGoal(6,new EntityAIDeliverExcessToChest(this));
     }
 
     @Override
@@ -68,7 +63,7 @@ public class EntityAutoFarmer extends EntityAnimal {
     }
 
 
-    public InventoryBasic getLocalInventory() {
+    public Inventory getLocalInventory() {
         return this.localInventory;
     }
 
@@ -80,34 +75,29 @@ public class EntityAutoFarmer extends EntityAnimal {
     }
     @Nullable
     @Override
-    public EntityAgeable createChild(EntityAgeable entityAgeable) {
+    public AgeableEntity createChild(AgeableEntity entityAgeable) {
         return null;
     }
 
-    @Nullable
-    @Override
-    public IEntityLivingData onInitialSpawn(DifficultyInstance p_204210_1_, @Nullable IEntityLivingData p_204210_2_, @Nullable NBTTagCompound p_204210_3_) {
-        return super.onInitialSpawn(p_204210_1_, p_204210_2_, p_204210_3_);
-    }
 
     @Override
-    public void writeAdditional(NBTTagCompound tag) {
+    public void writeAdditional(CompoundNBT tag) {
         super.writeAdditional(tag);
-        NBTTagList nbttaglist = new NBTTagList();
+        ListNBT nbttaglist = new ListNBT();
         for(int i = 0; i < this.localInventory.getSizeInventory(); ++i) {
             ItemStack itemstack = this.localInventory.getStackInSlot(i);
             if (!itemstack.isEmpty()) {
-                nbttaglist.add((INBTBase)itemstack.write(new NBTTagCompound()));
+                nbttaglist.add(itemstack.write(new CompoundNBT()));
             }
         }
-        tag.setTag("Inventory", nbttaglist);
+        tag.put("Inventory", nbttaglist);
     }
 
     @Override
-    public void readAdditional(NBTTagCompound tag) {
+    public void readAdditional(CompoundNBT tag) {
         super.readAdditional(tag);
 
-        NBTTagList nbttaglist = tag.getList("Inventory", 10);
+        ListNBT nbttaglist = tag.getList("Inventory", 10);
 
         for(int i = 0; i < nbttaglist.size(); ++i) {
             ItemStack itemstack = ItemStack.read(nbttaglist.getCompound(i));

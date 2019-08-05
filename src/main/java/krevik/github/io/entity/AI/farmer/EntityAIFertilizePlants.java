@@ -4,25 +4,19 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockFarmland;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBoneMeal;
+import net.minecraft.block.CropsBlock;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.MoveToBlockGoal;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.EnumHand;
+import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
-public class EntityAIFertilizePlants extends EntityAIBase {
+public class EntityAIFertilizePlants extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -38,7 +32,7 @@ public class EntityAIFertilizePlants extends EntityAIBase {
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
         FertilizablePlants = new ArrayList<>();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -77,12 +71,12 @@ public class EntityAIFertilizePlants extends EntityAIBase {
     @Override
     public void tick() {
         if(destinationBlock!=null){
-            NPC.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Items.BONE_MEAL,1));
+            NPC.setHeldItem(Hand.MAIN_HAND,new ItemStack(Items.BONE_MEAL,1));
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
-                if(world.getBlockState(FertilizablePlants.get(0).up()).has(BlockCrops.AGE)){
-                    if(world.getBlockState(FertilizablePlants.get(0).up()).get(BlockCrops.AGE)<7){
+                if(world.getBlockState(FertilizablePlants.get(0).up()).has(CropsBlock.AGE)){
+                    if(world.getBlockState(FertilizablePlants.get(0).up()).get(CropsBlock.AGE)<7){
                         if(helper.isBoneMealInInventory(NPC)) {
                             ArrayList<ItemWithInventoryIndexEntry> bonemealEntries = helper.getBoneMealWithIndexesInInventory(NPC.getLocalInventory(), NPC);
                             if (!bonemealEntries.isEmpty()) {
@@ -92,7 +86,7 @@ public class EntityAIFertilizePlants extends EntityAIBase {
                                         if(!world.isRemote){
                                             world.playEvent(2005, FertilizablePlants.get(0).up(), 0);
                                         }
-                                        ((BlockCrops) world.getBlockState(FertilizablePlants.get(0).up()).getBlock()).grow(world, FertilizablePlants.get(0).up(), world.getBlockState(FertilizablePlants.get(0).up()));
+                                        ((CropsBlock) world.getBlockState(FertilizablePlants.get(0).up()).getBlock()).grow(world, FertilizablePlants.get(0).up(), world.getBlockState(FertilizablePlants.get(0).up()));
                                         NPC.getLocalInventory().getStackInSlot(itemEntry.getInventoryIndex()).shrink(1);
                                     }
                                 }
@@ -104,7 +98,7 @@ public class EntityAIFertilizePlants extends EntityAIBase {
                 destinationBlock=null;
                 pathTimer=0;
                 FertilizablePlants.remove(0);
-                NPC.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+                NPC.setHeldItem(Hand.MAIN_HAND,ItemStack.EMPTY);
             }
         }else{
             destinationBlock = FertilizablePlants.get(0);
@@ -112,11 +106,11 @@ public class EntityAIFertilizePlants extends EntityAIBase {
     }
 
     public double getTargetDistanceSq() {
-        return 1.25D;
+        return 1.75D;
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSqToCenter(this.destinationBlock.up()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),this.destinationBlock.up().getY(),this.destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

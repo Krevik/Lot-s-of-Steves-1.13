@@ -4,23 +4,17 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.ai.EntityAIHarvestFarmland;
-import net.minecraft.entity.ai.EntityAIMoveToBlock;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityChest;
+import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReaderBase;
 import net.minecraft.world.World;
-import org.lwjgl.system.CallbackI;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
-public class EntityAIDeliverExcessToChest extends EntityAIBase {
+public class EntityAIDeliverExcessToChest extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -37,7 +31,7 @@ public class EntityAIDeliverExcessToChest extends EntityAIBase {
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
         chestPoses=new ArrayList<>();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -79,8 +73,8 @@ public class EntityAIDeliverExcessToChest extends EntityAIBase {
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
                 if(world.getTileEntity(chestPoses.get(0))!=null){
-                    if(world.getTileEntity(chestPoses.get(0)) instanceof TileEntityChest){
-                        TileEntityChest chest = (TileEntityChest) world.getTileEntity(chestPoses.get(0));
+                    if(world.getTileEntity(chestPoses.get(0)) instanceof ChestTileEntity){
+                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestPoses.get(0));
                         tryToTransferItemsToChest(chest);
                     }
                 }
@@ -94,7 +88,7 @@ public class EntityAIDeliverExcessToChest extends EntityAIBase {
         }
     }
 
-    private void tryToTransferItemsToChest(TileEntityChest chest){
+    private void tryToTransferItemsToChest(ChestTileEntity chest){
         for(int c=0;c<=15;c++){
             if(!excessItemStacks.isEmpty()) {
                 if (!chest.getStackInSlot(c).isEmpty()) {
@@ -130,11 +124,11 @@ public class EntityAIDeliverExcessToChest extends EntityAIBase {
     }
 
     public double getTargetDistanceSq() {
-        return 1.25D;
+        return 1.75D;
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSqToCenter(this.destinationBlock.up()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),this.destinationBlock.up().getY(),this.destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

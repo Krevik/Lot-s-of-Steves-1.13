@@ -4,22 +4,19 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockFarmland;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.FarmlandBlock;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
-public class EntityAIPlantSeeds extends EntityAIBase {
+public class EntityAIPlantSeeds extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -35,7 +32,7 @@ public class EntityAIPlantSeeds extends EntityAIBase {
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
         wetFarmlands =new ArrayList<>();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -78,19 +75,19 @@ public class EntityAIPlantSeeds extends EntityAIBase {
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
                 if(world.getBlockState(wetFarmlands.get(0)).getBlock() == Blocks.FARMLAND){
-                    if(world.getBlockState(wetFarmlands.get(0)).get(BlockFarmland.MOISTURE)>2){
+                    if(world.getBlockState(wetFarmlands.get(0)).get(FarmlandBlock.MOISTURE)>2){
                         ArrayList<ItemWithInventoryIndexEntry> itemEntries = helper.getSeedsWithInventoryIndexes(NPC);
                         if(!itemEntries.isEmpty()) {
                             ItemWithInventoryIndexEntry itemEntry = itemEntries.get(NPC.getRNG().nextInt(itemEntries.size()));
-                            NPC.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(itemEntry.getItem()));
-                            IBlockState stateToPlant = helper.getBlockStateToPlant(itemEntry.getItem());
+                            NPC.setHeldItem(Hand.MAIN_HAND,new ItemStack(itemEntry.getItem()));
+                            BlockState stateToPlant = helper.getBlockStateToPlant(itemEntry.getItem());
                             if (world.isAirBlock(wetFarmlands.get(0).up())) {
                                 if (world.isAirBlock(wetFarmlands.get(0).up(2))) {
                                     world.setBlockState(wetFarmlands.get(0).up(), stateToPlant, 3);
                                     NPC.getLocalInventory().getStackInSlot(itemEntry.getInventoryIndex()).shrink(1);
                                 }
                             }
-                            NPC.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+                            NPC.setHeldItem(Hand.MAIN_HAND,ItemStack.EMPTY);
                         }
                     }
                 }
@@ -105,11 +102,11 @@ public class EntityAIPlantSeeds extends EntityAIBase {
     }
 
     public double getTargetDistanceSq() {
-        return 1.25D;
+        return 1.75D;
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSqToCenter(this.destinationBlock.up()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),destinationBlock.up().getY(),destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

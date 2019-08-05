@@ -4,19 +4,17 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
-import net.minecraft.block.BlockBeetroot;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.block.BeetrootBlock;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.CropsBlock;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
-public class EntityAIHarvestFarmland extends EntityAIBase {
+public class EntityAIHarvestFarmland extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -32,7 +30,7 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
         plantsReadyToHarvest = new ArrayList<>();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -73,8 +71,8 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
-                if(world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock() instanceof BlockCrops){
-                    if(((BlockCrops)world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock()).isMaxAge(world.getBlockState(plantsReadyToHarvest.get(0).up()))){
+                if(world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock() instanceof CropsBlock){
+                    if(((CropsBlock)world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock()).isMaxAge(world.getBlockState(plantsReadyToHarvest.get(0).up()))){
                         if(helper.isFreeSlotInInventory(NPC.getLocalInventory())) {
                                 if (world.isAirBlock(plantsReadyToHarvest.get(0).up(2))) {
                                     if (world.isAirBlock(plantsReadyToHarvest.get(0).up(3))) {
@@ -82,7 +80,7 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
                                         if(helper.areAnySeedsInInventory(NPC)){
                                             ArrayList<ItemWithInventoryIndexEntry> seeds = helper.getSeedsWithInventoryIndexes(NPC);
                                             ItemWithInventoryIndexEntry seed = seeds.get(NPC.getRNG().nextInt(seeds.size()));
-                                            IBlockState toPlant = helper.getBlockStateToPlant(seed.getItem());
+                                            BlockState toPlant = helper.getBlockStateToPlant(seed.getItem());
                                             world.setBlockState(plantsReadyToHarvest.get(0).up(),toPlant,3);
                                             NPC.getLocalInventory().getStackInSlot(seed.getInventoryIndex()).shrink(1);
                                         }
@@ -90,8 +88,8 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
                                 }
                         }
                     }
-                    if(world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock() instanceof BlockBeetroot) {
-                        if (((BlockBeetroot) world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock()).isMaxAge(world.getBlockState(plantsReadyToHarvest.get(0).up()))) {
+                    if(world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock() instanceof BeetrootBlock) {
+                        if (((BeetrootBlock) world.getBlockState(plantsReadyToHarvest.get(0).up()).getBlock()).isMaxAge(world.getBlockState(plantsReadyToHarvest.get(0).up()))) {
                             if (helper.isFreeSlotInInventory(NPC.getLocalInventory())) {
                                 if (world.isAirBlock(plantsReadyToHarvest.get(0).up(2))) {
                                     if (world.isAirBlock(plantsReadyToHarvest.get(0).up(3))) {
@@ -99,7 +97,7 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
                                         if(helper.areAnySeedsInInventory(NPC)){
                                             ArrayList<ItemWithInventoryIndexEntry> seeds = helper.getSeedsWithInventoryIndexes(NPC);
                                             ItemWithInventoryIndexEntry seed = seeds.get(NPC.getRNG().nextInt(seeds.size()));
-                                            IBlockState toPlant = helper.getBlockStateToPlant(seed.getItem());
+                                            BlockState toPlant = helper.getBlockStateToPlant(seed.getItem());
                                             world.setBlockState(plantsReadyToHarvest.get(0).up(),toPlant,3);
                                             NPC.getLocalInventory().getStackInSlot(seed.getInventoryIndex()).shrink(1);
                                         }
@@ -120,11 +118,11 @@ public class EntityAIHarvestFarmland extends EntityAIBase {
     }
 
     public double getTargetDistanceSq() {
-        return 1.25D;
+        return 1.75D;
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSqToCenter(this.destinationBlock.up()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),this.destinationBlock.up().getY(),this.destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

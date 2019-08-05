@@ -4,15 +4,16 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
-import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
 
-public class EntityAIEquipTool extends EntityAIBase {
+public class EntityAIEquipTool extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -24,7 +25,7 @@ public class EntityAIEquipTool extends EntityAIBase {
         runDelay=100;
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         world=npc.getEntityWorld();
     }
 
@@ -56,7 +57,7 @@ public class EntityAIEquipTool extends EntityAIBase {
             if(helper.areToolsInInventory(NPC)){
                 ArrayList<ItemWithInventoryIndexEntry> availableTools = helper.getAvailableToolsInInventory(NPC);
                 ItemStack stackToEquip = NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex());
-                NPC.setHeldItem(EnumHand.MAIN_HAND,stackToEquip);
+                NPC.setHeldItem(Hand.MAIN_HAND,stackToEquip);
                 NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex()).setCount(0);
             }
         }

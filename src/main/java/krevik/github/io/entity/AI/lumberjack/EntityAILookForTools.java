@@ -1,21 +1,19 @@
 package krevik.github.io.entity.AI.lumberjack;
 
 import krevik.github.io.LotsOfSteves;
-import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.FunctionHelper;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemAxe;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityChest;
+import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
-public class EntityAILookForTools extends EntityAIBase {
+public class EntityAILookForTools extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -31,7 +29,7 @@ public class EntityAILookForTools extends EntityAIBase {
         actualDelay=0;
         helper=LotsOfSteves.getHelper();
         chestsWithTools =new ArrayList<>();
-        setMutexBits(5);
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -74,11 +72,11 @@ public class EntityAILookForTools extends EntityAIBase {
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
                 if(world.getTileEntity(chestsWithTools.get(0))!=null){
-                    if(world.getTileEntity(chestsWithTools.get(0)) instanceof TileEntityChest && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                        TileEntityChest chest = (TileEntityChest) world.getTileEntity(chestsWithTools.get(0));
+                    if(world.getTileEntity(chestsWithTools.get(0)) instanceof ChestTileEntity && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestsWithTools.get(0));
                         for(int c=0;c<16;c++){
                             if(!chest.getStackInSlot(c).isEmpty()){
-                                if(chest.getStackInSlot(c).getItem() instanceof ItemAxe){
+                                if(chest.getStackInSlot(c).getItem() instanceof AxeItem){
                                     ItemStack stackToTransfer = chest.getStackInSlot(c);
                                     NPC.getLocalInventory().addItem(stackToTransfer);
                                     chest.getStackInSlot(c).setCount(0);
@@ -103,7 +101,7 @@ public class EntityAILookForTools extends EntityAIBase {
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSqToCenter(this.destinationBlock.up()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),destinationBlock.up().getY(),destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

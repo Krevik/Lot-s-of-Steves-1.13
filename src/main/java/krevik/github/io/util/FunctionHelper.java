@@ -2,21 +2,14 @@ package krevik.github.io.util;
 
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockBeetroot;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockFarmland;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.block.*;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.AxeItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemAxe;
-import net.minecraft.item.ItemBoneMeal;
-import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.EnumHand;
+import net.minecraft.item.Items;
+import net.minecraft.tileentity.ChestTileEntity;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -28,7 +21,7 @@ public class FunctionHelper {
 
     //--------------------------------------------------------FARMER START----------------------------------------------------
 
-    public boolean isFreeSlotInInventory(InventoryBasic inv){
+    public boolean isFreeSlotInInventory(Inventory inv){
         boolean is=false;
         for(int x=0;x<inv.getSizeInventory();x++){
             if(inv.getStackInSlot(x).isEmpty()){
@@ -47,7 +40,7 @@ public class FunctionHelper {
         for(int c=0;c<farmer.getLocalInventory().getSizeInventory();c++){
             if(!farmer.getLocalInventory().getStackInSlot(c).isEmpty()) {
                 Item item = farmer.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.CARROT) {areCarrotsHere=true;}
+                if(item== Items.CARROT) {areCarrotsHere=true;}
                 if(item==Items.POTATO) {arePotatoesHere=true;}
                 if(item==Items.WHEAT_SEEDS) {areWheatSeedsHere=true;}
                 if(item==Items.BEETROOT_SEEDS) {areBeetrotsSeedsHere=true;}
@@ -70,7 +63,7 @@ public class FunctionHelper {
     }
 
 
-    public ArrayList<ItemWithInventoryIndexEntry> getBoneMealWithIndexesInInventory(InventoryBasic localInventory, EntityAutoFarmer farmer){
+    public ArrayList<ItemWithInventoryIndexEntry> getBoneMealWithIndexesInInventory(Inventory localInventory, EntityAutoFarmer farmer){
         ArrayList<ItemWithInventoryIndexEntry> result=new ArrayList<>();
         for(int c=0;c<localInventory.getSizeInventory();c++){
             if(!localInventory.getStackInSlot(c).isEmpty()){
@@ -83,8 +76,8 @@ public class FunctionHelper {
         return result;
     }
 
-    public IBlockState getBlockStateToPlant(Item item){
-        IBlockState result= Blocks.WHEAT.getDefaultState();
+    public BlockState getBlockStateToPlant(Item item){
+        BlockState result= Blocks.WHEAT.getDefaultState();
         if(item == Items.WHEAT_SEEDS) return Blocks.WHEAT.getDefaultState();
         if(item == Items.BEETROOT_SEEDS) return Blocks.BEETROOTS.getDefaultState();
         if(item == Items.CARROT) return Blocks.CARROTS.getDefaultState();
@@ -115,8 +108,8 @@ public class FunctionHelper {
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck = new BlockPos(NPC.getPosition().getX()+x,NPC.getPosition().getY()+y,NPC.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
-                        if(world.getTileEntity(toCheck) instanceof TileEntityChest){
-                            TileEntityChest chest = (TileEntityChest) world.getTileEntity(toCheck);
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
                             for(int c=0;c<=15;c++){
                                 if(!chest.getStackInSlot(c).isEmpty()){
                                     Item item = chest.getStackInSlot(c).getItem();
@@ -160,8 +153,8 @@ public class FunctionHelper {
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
-                        if(world.getTileEntity(toCheck) instanceof TileEntityChest){
-                            TileEntityChest chest = (TileEntityChest) world.getTileEntity(toCheck);
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
                             for(int c=0;c<=15;c++){
                                 if(!chest.getStackInSlot(c).isEmpty()){
                                     Item item = chest.getStackInSlot(c).getItem();
@@ -203,7 +196,7 @@ public class FunctionHelper {
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getBlockState(toCheck).getBlock() == Blocks.FARMLAND){
-                        if(world.getBlockState(toCheck).get(BlockFarmland.MOISTURE)>2){
+                        if(world.getBlockState(toCheck).get(FarmlandBlock.MOISTURE)>2){
                             if(world.isAirBlock(toCheck.up())){
                                 if(world.isAirBlock(toCheck.up(2))){
                                     result.add(toCheck);
@@ -226,8 +219,8 @@ public class FunctionHelper {
             for(int y=-radius;y<=radius;y++){
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
-                    if(world.getBlockState(toCheck).has(BlockCrops.AGE)){
-                        if(world.getBlockState(toCheck).get(BlockCrops.AGE)<7){
+                    if(world.getBlockState(toCheck).has(CropsBlock.AGE)){
+                        if(world.getBlockState(toCheck).get(CropsBlock.AGE)<7){
                             if(world.isAirBlock(toCheck.up())){
                                 if(world.isAirBlock(toCheck.up(2))){
                                     result.add(toCheck.down());
@@ -241,15 +234,31 @@ public class FunctionHelper {
         return result;
     }
 
-    public ArrayList<EntityItem> getPickableLoot(EntityAutoFarmer npc){
-        ArrayList<EntityItem> result=new ArrayList<>();
+    private static ArrayList<Item> collectibleItems = new ArrayList<>();
+    public static ArrayList<Item> getCollectibleItems() {
+        if(collectibleItems.isEmpty()) {
+            collectibleItems.add(Items.WHEAT);
+            collectibleItems.add(Items.WHEAT_SEEDS);
+            collectibleItems.add(Items.BONE_MEAL);
+            collectibleItems.add(Items.CARROT);
+            collectibleItems.add(Items.POTATO);
+            collectibleItems.add(Items.BEETROOT);
+            collectibleItems.add(Items.BEETROOT_SEEDS);
+        }
+        return collectibleItems;
+    }
+
+    public ArrayList<ItemEntity> getPickableLoot(EntityAutoFarmer npc){
+        ArrayList<ItemEntity> result=new ArrayList<>();
         int radius = npc.getWorkRadius();
         World world = npc.getEntityWorld();
 
-        List<EntityItem> e = world.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(npc.getPosition().getX() - radius, npc.getPosition().getY() - radius, npc.getPosition().getZ() - radius, npc.getPosition().getX() + radius, npc.getPosition().getY() + radius, npc.getPosition().getZ() + radius));
+        List<ItemEntity> e = world.getEntitiesWithinAABB(ItemEntity.class, new AxisAlignedBB(npc.getPosition().getX() - radius, npc.getPosition().getY() - radius, npc.getPosition().getZ() - radius, npc.getPosition().getX() + radius, npc.getPosition().getY() + radius, npc.getPosition().getZ() + radius));
         if(!e.isEmpty()){
-            for(EntityItem item:e){
-                result.add(item);
+            for(ItemEntity item:e){
+                if(getCollectibleItems().contains(item.getItem().getItem())) {
+                    result.add(item);
+                }
             }
         }
         return result;
@@ -263,16 +272,16 @@ public class FunctionHelper {
             for(int y=-radius;y<=radius;y++){
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
-                    if(world.getBlockState(toCheck).getBlock() instanceof BlockCrops){
-                        if(((BlockCrops)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
+                    if(world.getBlockState(toCheck).getBlock() instanceof CropsBlock){
+                        if(((CropsBlock)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
                             if(world.isAirBlock(toCheck.up())){
                                 if(world.isAirBlock(toCheck.up(2))){
                                     result.add(toCheck.down());
                                 }
                             }
                         }
-                        if(world.getBlockState(toCheck).getBlock() instanceof BlockBeetroot){
-                            if(((BlockBeetroot)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
+                        if(world.getBlockState(toCheck).getBlock() instanceof BeetrootBlock){
+                            if(((BeetrootBlock)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
                                 if(world.isAirBlock(toCheck.up())){
                                     if(world.isAirBlock(toCheck.up(2))){
                                         result.add(toCheck.down());
@@ -311,8 +320,8 @@ public class FunctionHelper {
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
-                        if(world.getTileEntity(toCheck) instanceof TileEntityChest){
-                            TileEntityChest chest = (TileEntityChest) world.getTileEntity(toCheck);
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
                             for(int c=0;c<=15;c++){
                                 if(chest.getStackInSlot(c).isEmpty()){
                                     isFreeSlotThere=true;
@@ -371,7 +380,7 @@ public class FunctionHelper {
         boolean result=false;
         for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
-                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof ItemAxe){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof AxeItem){
                     result=true;
                 }
             }
@@ -389,11 +398,11 @@ public class FunctionHelper {
                 for(int z=-radius;z<=radius;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck) != null){
-                        if(world.getTileEntity(toCheck) instanceof TileEntityChest){
-                            TileEntityChest chest = (TileEntityChest) world.getTileEntity(toCheck);
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
                             for(int c=0;c<16;c++){
                                 if(!chest.getStackInSlot(c).isEmpty()){
-                                    if(chest.getStackInSlot(c).getItem() instanceof ItemAxe){
+                                    if(chest.getStackInSlot(c).getItem() instanceof AxeItem){
                                         result.add(toCheck);
                                     }
                                 }
@@ -409,7 +418,7 @@ public class FunctionHelper {
 
     public boolean isToolEquipped(EntityAutoLumberjack npc){
         boolean result=false;
-        if(npc.getHeldItem(EnumHand.MAIN_HAND).getItem() instanceof ItemAxe){
+        if(npc.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AxeItem){
             result=true;
         }
         return result;
@@ -419,7 +428,7 @@ public class FunctionHelper {
         ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
         for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
-                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof ItemAxe){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof AxeItem){
                     ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c);
                     result.add(itemEntry);
                 }
