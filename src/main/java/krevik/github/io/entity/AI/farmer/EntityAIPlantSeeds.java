@@ -56,7 +56,7 @@ public class EntityAIPlantSeeds extends Goal {
     @Override
     public boolean shouldContinueExecuting() {
         actualDelay=0;
-        return !wetFarmlands.isEmpty();
+        return !wetFarmlands.isEmpty() && helper.areAnySeedsInInventory(NPC);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class EntityAIPlantSeeds extends Goal {
         if(destinationBlock!=null){
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
-            if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
+            if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){
                 if(world.getBlockState(wetFarmlands.get(0)).getBlock() == Blocks.FARMLAND){
                     if(world.getBlockState(wetFarmlands.get(0)).get(FarmlandBlock.MOISTURE)>2){
                         ArrayList<ItemWithInventoryIndexEntry> itemEntries = helper.getSeedsWithInventoryIndexes(NPC);
@@ -102,11 +102,11 @@ public class EntityAIPlantSeeds extends Goal {
     }
 
     public double getTargetDistanceSq() {
-        return 1.75D;
+        return 6D;
     }
 
-    protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),destinationBlock.up().getY(),destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
+    protected boolean getIsNearDestination() {
+        if (this.NPC.getDistanceSq(this.destinationBlock.getX(),destinationBlock.getY(),destinationBlock.getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

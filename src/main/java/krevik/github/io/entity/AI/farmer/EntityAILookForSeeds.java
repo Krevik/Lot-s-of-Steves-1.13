@@ -40,8 +40,8 @@ public class EntityAILookForSeeds extends Goal {
     public boolean shouldExecute() {
         actualDelay++;
         if(actualDelay>=runDelay){
-            if(!helper.areAllSeedsInInventory(NPC)&&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                chestPoses=helper.chestPosesWithSeedsThatAreNotInInventory(NPC);
+            if(!helper.areAllSeedsOfInterestInInventory(NPC)&&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                chestPoses=helper.chestPosesWithSeedsThatAreNotInInventoryButAreInInterest(NPC);
                 if(!chestPoses.isEmpty()){
                     return true;
                 }

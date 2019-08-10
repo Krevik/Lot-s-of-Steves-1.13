@@ -1,5 +1,6 @@
 package krevik.github.io.util;
 
+import com.google.common.collect.ImmutableSet;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import net.minecraft.block.*;
@@ -10,12 +11,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import org.antlr.v4.runtime.misc.Array2DHashSet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class FunctionHelper {
 
@@ -26,13 +28,31 @@ public class FunctionHelper {
         for(int x=0;x<inv.getSizeInventory();x++){
             if(inv.getStackInSlot(x).isEmpty()){
                 is=true;
+                break;
             }
         }
         return is;
     }
 
 
-    public boolean areAllSeedsInInventory(EntityAutoFarmer farmer){
+    //NEW
+    public boolean NEWareAllSeedsOfInterestInInventory(EntityAutoFarmer farmer){
+        int required=farmer.SEEDS.size();
+        int alreadyHaving=0;
+        for(Item item: farmer.SEEDS){
+            for(int c=0;c<farmer.getLocalInventory().getSizeInventory();c++){
+                if(!farmer.getLocalInventory().getStackInSlot(c).isEmpty()) {
+                    if(item == farmer.getLocalInventory().getStackInSlot(c).getItem()){
+                        alreadyHaving++;
+                        break;
+                    }
+                }
+            }
+        }
+        return alreadyHaving>=required;
+    }
+
+    public boolean areAllSeedsOfInterestInInventory(EntityAutoFarmer farmer){
         boolean areCarrotsHere=false;
         boolean areWheatSeedsHere=false;
         boolean arePotatoesHere=false;
@@ -40,10 +60,10 @@ public class FunctionHelper {
         for(int c=0;c<farmer.getLocalInventory().getSizeInventory();c++){
             if(!farmer.getLocalInventory().getStackInSlot(c).isEmpty()) {
                 Item item = farmer.getLocalInventory().getStackInSlot(c).getItem();
-                if(item== Items.CARROT) {areCarrotsHere=true;}
-                if(item==Items.POTATO) {arePotatoesHere=true;}
-                if(item==Items.WHEAT_SEEDS) {areWheatSeedsHere=true;}
-                if(item==Items.BEETROOT_SEEDS) {areBeetrotsSeedsHere=true;}
+                if(item==Items.CARROT || !farmer.SEEDS.contains(item) ) {areCarrotsHere=true;}
+                if(item==Items.POTATO || !farmer.SEEDS.contains(item)) {arePotatoesHere=true;}
+                if(item==Items.WHEAT_SEEDS || !farmer.SEEDS.contains(item)) {areWheatSeedsHere=true;}
+                if(item==Items.BEETROOT_SEEDS || !farmer.SEEDS.contains(item)) {areBeetrotsSeedsHere=true;}
             }
         }
         return areCarrotsHere&&areWheatSeedsHere&&arePotatoesHere&&areBeetrotsSeedsHere;
@@ -77,7 +97,7 @@ public class FunctionHelper {
     }
 
     public BlockState getBlockStateToPlant(Item item){
-        BlockState result= Blocks.WHEAT.getDefaultState();
+        BlockState result = Blocks.WHEAT.getDefaultState();
         if(item == Items.WHEAT_SEEDS) return Blocks.WHEAT.getDefaultState();
         if(item == Items.BEETROOT_SEEDS) return Blocks.BEETROOTS.getDefaultState();
         if(item == Items.CARROT) return Blocks.CARROTS.getDefaultState();
@@ -85,7 +105,55 @@ public class FunctionHelper {
         return result;
     }
 
-    public ArrayList<BlockPos> chestPosesWithSeedsThatAreNotInInventory(EntityAutoFarmer NPC){
+    //NEW
+    public ArrayList<BlockPos> NEWchestPosesWithSeedsThatAreNotInInventoryButAreInInterest(EntityAutoFarmer npc){
+        ArrayList<Item> all_required_seeds = new ArrayList<>();
+        all_required_seeds.addAll(npc.SEEDS);
+        ArrayList<Item> actual_having_seeds = new ArrayList<>();
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()) {
+                Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
+                if(all_required_seeds.contains(item)){
+                    actual_having_seeds.add(item);
+                }
+            }
+        }
+        ArrayList<Item> required_seeds = new ArrayList<>();
+        for(Item item: all_required_seeds){
+            if(!actual_having_seeds.contains(item)){
+                required_seeds.add(item);
+            }
+        }
+
+        ArrayList<BlockPos> result=new ArrayList<>();
+        World world = npc.getEntityWorld();
+        int xRadius=npc.getWorkingRadius().getXRadius();
+        int yRadius=npc.getWorkingRadius().getYRadius();
+        int zRadius=npc.getWorkingRadius().getZRadius();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck)!=null){
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                            for(int c=0;c<=15;c++){
+                                if(!chest.getStackInSlot(c).isEmpty()){
+                                    Item item = chest.getStackInSlot(c).getItem();
+                                    if(required_seeds.contains(item)){
+                                        result.add(toCheck);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<BlockPos> chestPosesWithSeedsThatAreNotInInventoryButAreInInterest(EntityAutoFarmer NPC){
         ArrayList<BlockPos> result=new ArrayList<>();
         boolean doesNPCHaveWheatSeeds=false;
         boolean doesNPCHaveBeetrotSeeds=false;
@@ -102,10 +170,12 @@ public class FunctionHelper {
         }
 
         World world = NPC.getEntityWorld();
-        int radius=NPC.getWorkRadius();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        int xRadius=NPC.getWorkingRadius().getXRadius();
+        int yRadius=NPC.getWorkingRadius().getYRadius();
+        int zRadius=NPC.getWorkingRadius().getZRadius();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck = new BlockPos(NPC.getPosition().getX()+x,NPC.getPosition().getY()+y,NPC.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
                         if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
@@ -146,11 +216,13 @@ public class FunctionHelper {
 
     public ArrayList<BlockPos> chestPosesWithBonemeal(EntityAutoFarmer npc){
         ArrayList<BlockPos> result = new ArrayList<>();
-        int radius=npc.getWorkRadius();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
                         if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
@@ -177,7 +249,7 @@ public class FunctionHelper {
         for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
                 Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.POTATO||item==Items.CARROT||item==Items.BEETROOT_SEEDS||item==Items.WHEAT_SEEDS){
+                if(npc.SEEDS.contains(item)){
                     result=true;
                     break;
                 }
@@ -189,11 +261,13 @@ public class FunctionHelper {
 
     public ArrayList<BlockPos> getAvailableFarmlands(EntityAutoFarmer npc){
         ArrayList<BlockPos> result=new ArrayList<>();
-        int radius = npc.getWorkRadius();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getBlockState(toCheck).getBlock() == Blocks.FARMLAND){
                         if(world.getBlockState(toCheck).get(FarmlandBlock.MOISTURE)>2){
@@ -213,17 +287,34 @@ public class FunctionHelper {
 
     public ArrayList<BlockPos> getFertilizablePlants(EntityAutoFarmer npc){
         ArrayList<BlockPos> result=new ArrayList<>();
-        int radius = npc.getWorkRadius();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getBlockState(toCheck).has(CropsBlock.AGE)){
                         if(world.getBlockState(toCheck).get(CropsBlock.AGE)<7){
                             if(world.isAirBlock(toCheck.up())){
                                 if(world.isAirBlock(toCheck.up(2))){
-                                    result.add(toCheck.down());
+                                    Block blockToCheck=world.getBlockState(toCheck).getBlock();
+                                    if(npc.CROPS_ALLOWED.contains(blockToCheck)) {
+                                        result.add(toCheck.down());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if(world.getBlockState(toCheck).has(BeetrootBlock.BEETROOT_AGE)){
+                        if(world.getBlockState(toCheck).get(BeetrootBlock.BEETROOT_AGE)<3){
+                            if(world.isAirBlock(toCheck.up())){
+                                if(world.isAirBlock(toCheck.up(2))){
+                                    Block blockToCheck=world.getBlockState(toCheck).getBlock();
+                                    if(npc.CROPS_ALLOWED.contains(blockToCheck)) {
+                                        result.add(toCheck.down());
+                                    }
                                 }
                             }
                         }
@@ -234,29 +325,17 @@ public class FunctionHelper {
         return result;
     }
 
-    private static ArrayList<Item> collectibleItems = new ArrayList<>();
-    public static ArrayList<Item> getCollectibleItems() {
-        if(collectibleItems.isEmpty()) {
-            collectibleItems.add(Items.WHEAT);
-            collectibleItems.add(Items.WHEAT_SEEDS);
-            collectibleItems.add(Items.BONE_MEAL);
-            collectibleItems.add(Items.CARROT);
-            collectibleItems.add(Items.POTATO);
-            collectibleItems.add(Items.BEETROOT);
-            collectibleItems.add(Items.BEETROOT_SEEDS);
-        }
-        return collectibleItems;
-    }
-
     public ArrayList<ItemEntity> getPickableLoot(EntityAutoFarmer npc){
         ArrayList<ItemEntity> result=new ArrayList<>();
-        int radius = npc.getWorkRadius();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
 
-        List<ItemEntity> e = world.getEntitiesWithinAABB(ItemEntity.class, new AxisAlignedBB(npc.getPosition().getX() - radius, npc.getPosition().getY() - radius, npc.getPosition().getZ() - radius, npc.getPosition().getX() + radius, npc.getPosition().getY() + radius, npc.getPosition().getZ() + radius));
+        List<ItemEntity> e = world.getEntitiesWithinAABB(ItemEntity.class, new AxisAlignedBB(npc.getPosition().getX() - xRadius, npc.getPosition().getY() - yRadius, npc.getPosition().getZ() - zRadius, npc.getPosition().getX() + xRadius, npc.getPosition().getY() + yRadius, npc.getPosition().getZ() + zRadius));
         if(!e.isEmpty()){
             for(ItemEntity item:e){
-                if(getCollectibleItems().contains(item.getItem().getItem())) {
+                if(npc.ITEMS_OF_INTEREST.contains(item.getItem().getItem())) {
                     result.add(item);
                 }
             }
@@ -266,24 +345,32 @@ public class FunctionHelper {
 
     public ArrayList<BlockPos> getPlantsReadyToHarvest(EntityAutoFarmer npc){
         ArrayList<BlockPos> result=new ArrayList<>();
-        int radius = npc.getWorkRadius();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
-                    if(world.getBlockState(toCheck).getBlock() instanceof CropsBlock){
-                        if(((CropsBlock)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
+                    if(world.getBlockState(toCheck).has(CropsBlock.AGE) ){
+                        if( (world.getBlockState(toCheck).get(CropsBlock.AGE)>=7) ){
                             if(world.isAirBlock(toCheck.up())){
                                 if(world.isAirBlock(toCheck.up(2))){
-                                    result.add(toCheck.down());
+                                    Block blockToCheck = world.getBlockState(toCheck).getBlock();
+                                    if(npc.CROPS_ALLOWED.contains(blockToCheck)) {
+                                        result.add(toCheck.down());
+                                    }
                                 }
                             }
                         }
-                        if(world.getBlockState(toCheck).getBlock() instanceof BeetrootBlock){
-                            if(((BeetrootBlock)world.getBlockState(toCheck).getBlock()).isMaxAge(world.getBlockState(toCheck))){
-                                if(world.isAirBlock(toCheck.up())){
-                                    if(world.isAirBlock(toCheck.up(2))){
+                    }
+                    if(world.getBlockState(toCheck).has(BeetrootBlock.BEETROOT_AGE)){
+                        if(world.getBlockState(toCheck).get(BeetrootBlock.BEETROOT_AGE)>=3){
+                            if(world.isAirBlock(toCheck.up())){
+                                if(world.isAirBlock(toCheck.up(2))){
+                                    Block blockToCheck = world.getBlockState(toCheck).getBlock();
+                                    if(npc.CROPS_ALLOWED.contains(blockToCheck)) {
                                         result.add(toCheck.down());
                                     }
                                 }
@@ -301,7 +388,7 @@ public class FunctionHelper {
         for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
                 Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.WHEAT_SEEDS||item==Items.BEETROOT_SEEDS||item==Items.CARROT||item==Items.POTATO){
+                if(npc.SEEDS.contains(item)){
                     ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(item,c);
                     result.add(itemEntry);
                 }
@@ -310,27 +397,67 @@ public class FunctionHelper {
         return result;
     }
 
+    public BlockPos getNearestChestPos(EntityAutoFarmer npc, ArrayList<BlockPos> chestPoses){
+        BlockPos result = chestPoses.get(0);
+        for(BlockPos toCheck:chestPoses){
+            Vec3i farmerPos = new Vec3i(Math.abs(npc.getPosition().getX()),Math.abs(npc.getPosition().getY()),Math.abs(npc.getPosition().getZ()));
+            Vec3i toCheckPos = new Vec3i(Math.abs(toCheck.getX()),Math.abs(toCheck.getY()),Math.abs(toCheck.getZ()));
+            Vec3i resultPos = new Vec3i(Math.abs(result.getX()),Math.abs(result.getY()),Math.abs(result.getZ()));
+            if(farmerPos.distanceSq(toCheckPos)<farmerPos.distanceSq(resultPos)) {
+                result = toCheck;
+            }
+        }
+        return result;
+    }
+
+
     public ArrayList<BlockPos> getChestPosesWithFreeSlots(EntityAutoFarmer npc){
         ArrayList<BlockPos> result = new ArrayList<>();
-        int radius=npc.getWorkRadius();
-        boolean isFreeSlotThere=false;
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        ArrayList<BlockPos> allChests = new ArrayList<>();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck)!=null){
                         if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
-                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
-                            for(int c=0;c<=15;c++){
-                                if(chest.getStackInSlot(c).isEmpty()){
-                                    isFreeSlotThere=true;
-                                }
-                            }
+                            allChests.add(toCheck);
                         }
                     }
-                    if(isFreeSlotThere){
+                }
+            }
+        }
+
+        if(!allChests.isEmpty()){
+            for(BlockPos toCheck:allChests){
+                ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                for(int c=0;c<=15;c++){
+                    if(chest.getStackInSlot(c).isEmpty()){
                         result.add(toCheck);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    public ArrayList<ItemWithInventoryIndexEntry> NEWgetExcessItems(EntityAutoFarmer npc) {
+        ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
+        for(Item item: npc.ITEMS_OF_INTEREST){
+            boolean foundThatItemInInventory=false;
+            for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+                if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                    Item itemInCurrentSlot = npc.getLocalInventory().getStackInSlot(c).getItem();
+                    if(foundThatItemInInventory){
+                        result.add(new ItemWithInventoryIndexEntry(item,c));
+                    }
+                    if(item == itemInCurrentSlot){
+                        foundThatItemInInventory=true;
                     }
                 }
             }
@@ -349,19 +476,19 @@ public class FunctionHelper {
         for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
                 Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
-                if(!areBeetrotSeedsThere && item==Items.BEETROOT_SEEDS){
-                        areBeetrotSeedsThere=true;
+                if((!areBeetrotSeedsThere ) && item==Items.BEETROOT_SEEDS){
+                    areBeetrotSeedsThere=true;
                 }
-                else if(!areCarrotsThere && item == Items.CARROT){
-                        areCarrotsThere=true;
+                else if((!areCarrotsThere ) && item == Items.CARROT){
+                    areCarrotsThere=true;
                 }
-                else if(!arePotatoesThere && item==Items.POTATO){
-                        arePotatoesThere=true;
+                else if((!arePotatoesThere ) && item==Items.POTATO){
+                    arePotatoesThere=true;
                 }
-                else if(!areWheatSeedsThere && item==Items.WHEAT_SEEDS){
+                else if((!areWheatSeedsThere ) && item==Items.WHEAT_SEEDS){
                     areWheatSeedsThere=true;
                 }
-                else if(!isBoneMealHere && item==Items.BONE_MEAL){
+                else if((!isBoneMealHere ) && item==Items.BONE_MEAL){
                     isBoneMealHere=true;
                 }else{
                     result.add(new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c));

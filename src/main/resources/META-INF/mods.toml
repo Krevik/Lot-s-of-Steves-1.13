@@ -2,7 +2,7 @@ modLoader="javafml" #mandatory
 loaderVersion="[28,)" #mandatory (24 is current forge version)
 [[mods]] #mandatory
 modId="lots_of_steves" #mandatory
-version="0.1" #mandatory
+version="0.16" #mandatory
 displayName="Lot's Of Steves" #mandatory
 credits="Thanks to my team - Kathairis Dev Team" #optional
 authors="Krevik" #optional

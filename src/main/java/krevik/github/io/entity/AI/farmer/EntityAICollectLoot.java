@@ -74,17 +74,15 @@ public class EntityAICollectLoot extends Goal {
                     if(!stackToPickup.isEmpty()){
                         if(helper.isFreeSlotInInventory(NPC.getLocalInventory())){
                             NPC.getLocalInventory().addItem(stackToPickup);
-                            pickableLoot.get(0).remove();
                         }
-                    }else{
-                        destinationBlock=null;
-                        pathTimer=0;
-                        pickableLoot.remove(0);
                     }
                 }
                 destinationBlock=null;
                 pathTimer=0;
-                pickableLoot.remove(0);
+                if(pickableLoot.get(0)!=null) {
+                    pickableLoot.get(0).remove();
+                    pickableLoot.remove(0);
+                }
             }
         }else{
             destinationBlock = pickableLoot.get(0).getPosition();
@@ -92,7 +90,7 @@ public class EntityAICollectLoot extends Goal {
     }
 
     public double getTargetDistanceSq() {
-        return 3D;
+        return 6D;
     }
 
     protected boolean getIsNearDestination() {

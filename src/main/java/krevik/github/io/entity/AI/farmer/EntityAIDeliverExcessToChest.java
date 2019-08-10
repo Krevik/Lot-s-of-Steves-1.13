@@ -41,7 +41,7 @@ public class EntityAIDeliverExcessToChest extends Goal {
     public boolean shouldExecute() {
         actualDelay++;
         if(actualDelay>=runDelay){
-                chestPoses=helper.getChestPosesWithFreeSlots(NPC);
+            chestPoses=helper.getChestPosesWithFreeSlots(NPC);
                 excessItemStacks=helper.getExcessItems(NPC);
                 if(!chestPoses.isEmpty()&&!excessItemStacks.isEmpty()){
                     return true;
@@ -66,25 +66,29 @@ public class EntityAIDeliverExcessToChest extends Goal {
         return 150;
     }
 
+
     @Override
     public void tick() {
         if(destinationBlock!=null){
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
-                if(world.getTileEntity(chestPoses.get(0))!=null){
-                    if(world.getTileEntity(chestPoses.get(0)) instanceof ChestTileEntity){
-                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestPoses.get(0));
+                BlockPos nearestChestPos=helper.getNearestChestPos(NPC,chestPoses);
+                //BlockPos nearestChestPos=chestPoses.get(0);
+                if(world.getTileEntity(nearestChestPos)!=null){
+                    if(world.getTileEntity(nearestChestPos) instanceof ChestTileEntity){
+                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(nearestChestPos);
                         tryToTransferItemsToChest(chest);
                     }
                 }
 
                 destinationBlock=null;
                 pathTimer=0;
-                chestPoses.remove(0);
+                chestPoses.clear();
             }
         }else{
-            destinationBlock=chestPoses.get(0);
+            destinationBlock=helper.getNearestChestPos(NPC,chestPoses);
+            //destinationBlock=chestPoses.get(0);
         }
     }
 
@@ -115,6 +119,7 @@ public class EntityAIDeliverExcessToChest extends Goal {
                 } else {
                     if (!excessItemStacks.isEmpty()) {
                         chest.setInventorySlotContents(c, new ItemStack(excessItemStacks.get(0).getItem(), NPC.getLocalInventory().getStackInSlot(excessItemStacks.get(0).getInventoryIndex()).getCount()));
+                        NPC.getLocalInventory().getStackInSlot(excessItemStacks.get(0).getInventoryIndex()).setCount(0);
                         excessItemStacks = helper.getExcessItems(NPC);
                         break;
                     }
@@ -124,7 +129,7 @@ public class EntityAIDeliverExcessToChest extends Goal {
     }
 
     public double getTargetDistanceSq() {
-        return 1.75D;
+        return 6D;
     }
 
     protected boolean getIsAboveDestination() {
