@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-public class EntityAICollectLoot extends Goal {
+public class AIFarmerCollectLoot extends Goal {
 
     private int runDelay;
     private int actualDelay;
@@ -22,7 +22,7 @@ public class EntityAICollectLoot extends Goal {
     BlockPos destinationBlock;
     int pathTimer;
     World world;
-    public EntityAICollectLoot(EntityAutoFarmer npc){
+    public AIFarmerCollectLoot(EntityAutoFarmer npc){
         NPC=npc;
         runDelay=100;
         actualDelay=0;

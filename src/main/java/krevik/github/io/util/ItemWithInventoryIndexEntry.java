@@ -6,8 +6,8 @@ public class ItemWithInventoryIndexEntry {
 
     private Item item;
     private int inventoryIndex;
-    public ItemWithInventoryIndexEntry(Item seedItem, int index){
-        item=seedItem;
+    public ItemWithInventoryIndexEntry(Item ITEM, int index){
+        item=ITEM;
         inventoryIndex=index;
     }
 

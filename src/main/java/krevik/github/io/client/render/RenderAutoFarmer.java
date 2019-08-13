@@ -68,11 +68,12 @@ import java.util.UUID;
 @OnlyIn(Dist.CLIENT)
 public class RenderAutoFarmer extends BipedRenderer<EntityAutoFarmer, AutoFarmerModel<EntityAutoFarmer>> {
 
+
     ItemRenderer itemRenderer;
     ItemStack stackToRender;
     ItemEntity itemEntity;
     public RenderAutoFarmer(EntityRendererManager renderManager) {
-        super(renderManager, new AutoFarmerModel(1F,false), 1F);
+        super(renderManager, new AutoFarmerModel<>(1F,false), 1F);
         itemRenderer = Minecraft.getInstance().getItemRenderer();
     }
 
@@ -83,7 +84,7 @@ public class RenderAutoFarmer extends BipedRenderer<EntityAutoFarmer, AutoFarmer
         renderLivingLabel(entity,x,y,z,10);
         stackToRender = entity.getItemStackToRender(entity.getMode());
         itemEntity = new ItemEntity(entity.world,0,999,0,stackToRender);
-        renderItem(itemEntity,x,y+2.5f,z,entityYaw,partialTicks);
+        renderItem(x,y+2.5f,z);
     }
 
     protected void renderLivingLabel(EntityAutoFarmer entityIn, double x, double y, double z, int maxDistance) {
@@ -149,7 +150,7 @@ public class RenderAutoFarmer extends BipedRenderer<EntityAutoFarmer, AutoFarmer
 
 
     float scale = 1f;
-    public void renderItem(ItemEntity entity, double x, double y, double z, float entityYaw, float partialTicks) {
+    public void renderItem(double x, double y, double z) {
         GlStateManager.pushMatrix();
         GlStateManager.translatef((float)x, (float)y, (float)z);
         GlStateManager.enableRescaleNormal();
@@ -177,10 +178,5 @@ public class RenderAutoFarmer extends BipedRenderer<EntityAutoFarmer, AutoFarmer
         GlStateManager.disableRescaleNormal();
         GlStateManager.popMatrix();
     }
-
-    protected ResourceLocation getEntityTexture(ItemEntity entity) {
-        return AtlasTexture.LOCATION_BLOCKS_TEXTURE;
-    }
-
 
 }

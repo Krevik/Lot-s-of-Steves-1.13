@@ -1,19 +1,14 @@
 package krevik.github.io.entity;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import krevik.github.io.entity.AI.farmer.*;
 import krevik.github.io.init.ModEntities;
 import krevik.github.io.init.ModItems;
 import krevik.github.io.util.WorkingRadius;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.network.play.NetworkPlayerInfo;
-import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
@@ -26,7 +21,6 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
@@ -35,8 +29,6 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
 
 public class EntityAutoFarmer extends AnimalEntity {
 
@@ -191,7 +183,7 @@ public class EntityAutoFarmer extends AnimalEntity {
         goalSelector.addGoal(5,new EntityAIPlantSeeds(this));
         goalSelector.addGoal(6,new EntityAIFertilizePlants(this));
         goalSelector.addGoal(5,new EntityAIHarvestFarmland(this));
-        goalSelector.addGoal(5,new EntityAICollectLoot(this));
+        goalSelector.addGoal(5,new AIFarmerCollectLoot(this));
         goalSelector.addGoal(6,new EntityAIDeliverExcessToChest(this));
     }
 

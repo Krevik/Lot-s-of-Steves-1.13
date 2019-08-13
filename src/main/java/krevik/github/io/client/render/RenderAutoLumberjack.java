@@ -1,10 +1,12 @@
 package krevik.github.io.client.render;
 
+import krevik.github.io.client.model.AutoLumberjackModel;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.TextureLocationsRef;
 import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.layers.HeldItemLayer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,7 +19,7 @@ public class RenderAutoLumberjack extends BipedRenderer<EntityAutoLumberjack, Bi
 
     public RenderAutoLumberjack(EntityRendererManager renderManagerIn)
     {
-        super(renderManagerIn, new BipedModel<EntityAutoLumberjack>(1.0f), 0.8F);
+        super(renderManagerIn, new AutoLumberjackModel<>(1.0f,false), 1F);
     }
 
 

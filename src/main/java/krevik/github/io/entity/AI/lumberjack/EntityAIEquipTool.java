@@ -58,7 +58,7 @@ public class EntityAIEquipTool extends Goal {
                 ArrayList<ItemWithInventoryIndexEntry> availableTools = helper.getAvailableToolsInInventory(NPC);
                 ItemStack stackToEquip = NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex());
                 NPC.setHeldItem(Hand.MAIN_HAND,stackToEquip);
-                NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex()).setCount(0);
+                //NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex()).setCount(0);
             }
         }
     }

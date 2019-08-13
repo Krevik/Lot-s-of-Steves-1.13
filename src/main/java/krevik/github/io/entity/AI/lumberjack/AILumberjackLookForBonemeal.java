@@ -1,11 +1,13 @@
 package krevik.github.io.entity.AI.lumberjack;
 
 import krevik.github.io.LotsOfSteves;
+import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.FunctionHelper;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.item.AxeItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -13,23 +15,23 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-public class EntityAILookForTools extends Goal {
+public class AILumberjackLookForBonemeal extends Goal {
 
     private int runDelay;
     private int actualDelay;
     private EntityAutoLumberjack NPC;
     FunctionHelper helper;
-    ArrayList<BlockPos> chestsWithTools;
+    ArrayList<BlockPos> chestPoses;
     BlockPos destinationBlock;
     int pathTimer;
     World world;
-    public EntityAILookForTools(EntityAutoLumberjack npc){
+    public AILumberjackLookForBonemeal(EntityAutoLumberjack npc){
         NPC=npc;
         runDelay=100;
         actualDelay=0;
-        helper=LotsOfSteves.getHelper();
-        chestsWithTools =new ArrayList<>();
-        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
+        helper= LotsOfSteves.getHelper();
+        chestPoses=new ArrayList<>();
+        this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Goal.Flag.LOOK, Goal.Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
         world=npc.getEntityWorld();
@@ -39,9 +41,9 @@ public class EntityAILookForTools extends Goal {
     public boolean shouldExecute() {
         actualDelay++;
         if(actualDelay>=runDelay){
-            if(!helper.areToolsInInventory(NPC) && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                chestsWithTools = helper.getChestPosesWithTools(NPC);
-                if(!chestsWithTools.isEmpty()){
+            if(!helper.isBoneMealInInventoryLumberjack(NPC)&&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                chestPoses=helper.chestPosesWithBonemealLumberjack(NPC);
+                if(!chestPoses.isEmpty()){
                     return true;
                 }
             }
@@ -53,7 +55,7 @@ public class EntityAILookForTools extends Goal {
     @Override
     public boolean shouldContinueExecuting() {
         actualDelay=0;
-        return !chestsWithTools.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory());
+        return !chestPoses.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory());
     }
 
     @Override
@@ -71,37 +73,37 @@ public class EntityAILookForTools extends Goal {
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
-                if(world.getTileEntity(chestsWithTools.get(0))!=null){
-                    if(world.getTileEntity(chestsWithTools.get(0)) instanceof ChestTileEntity && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestsWithTools.get(0));
-                        for(int c=0;c<16;c++){
+                if(world.getTileEntity(chestPoses.get(0))!=null){
+                    if(world.getTileEntity(chestPoses.get(0)) instanceof ChestTileEntity &&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestPoses.get(0));
+                        for(int c=0;c<=15;c++){
                             if(!chest.getStackInSlot(c).isEmpty()){
-                                if(chest.getStackInSlot(c).getItem() instanceof AxeItem){
+                                Item item = chest.getStackInSlot(c).getItem();
+                                if(item == Items.BONE_MEAL){
                                     ItemStack stackToTransfer = chest.getStackInSlot(c);
                                     NPC.getLocalInventory().addItem(stackToTransfer);
                                     chest.getStackInSlot(c).setCount(0);
                                 }
                             }
                         }
-
                     }
                 }
 
                 destinationBlock=null;
                 pathTimer=0;
-                chestsWithTools.remove(0);
+                chestPoses.remove(0);
             }
         }else{
-            destinationBlock = chestsWithTools.get(0);
+            destinationBlock=chestPoses.get(0);
         }
     }
 
     public double getTargetDistanceSq() {
-        return 6D;
+        return 1.75D;
     }
 
     protected boolean getIsAboveDestination() {
-        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),destinationBlock.up().getY(),destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
+        if (this.NPC.getDistanceSq(this.destinationBlock.up().getX(),this.destinationBlock.up().getY(),destinationBlock.up().getZ()) > this.getTargetDistanceSq()) {
             return false;
         } else {
             return true;

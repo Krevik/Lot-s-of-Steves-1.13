@@ -20,6 +20,7 @@ public class BlockAutoLumberjackSpawner extends Block {
             LivingEntity entity = new EntityAutoLumberjack(worldIn);
             entity.setPosition(pos.getX()+0.5f,pos.getY()+0.5f,pos.getZ()+0.5f);
             worldIn.addEntity(entity);
+            ((EntityAutoLumberjack) entity).setHomePosAndDistance(new BlockPos(entity),15);
         }
     }
 }

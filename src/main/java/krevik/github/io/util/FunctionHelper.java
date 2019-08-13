@@ -516,13 +516,33 @@ public class FunctionHelper {
         return result;
     }
 
+    public ArrayList<ItemEntity> getPickableLootLumberjack(EntityAutoLumberjack npc){
+        ArrayList<ItemEntity> result=new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+
+        List<ItemEntity> e = world.getEntitiesWithinAABB(ItemEntity.class, new AxisAlignedBB(npc.getPosition().getX() - xRadius, npc.getPosition().getY() - yRadius, npc.getPosition().getZ() - zRadius, npc.getPosition().getX() + xRadius, npc.getPosition().getY() + yRadius, npc.getPosition().getZ() + zRadius));
+        if(!e.isEmpty()){
+            for(ItemEntity item:e){
+                if(npc.ITEMS_OF_INTEREST.contains(item.getItem().getItem()) || item.getItem().getItem() instanceof AxeItem) {
+                    result.add(item);
+                }
+            }
+        }
+        return result;
+    }
+
     public ArrayList<BlockPos> getChestPosesWithTools(EntityAutoLumberjack npc){
         ArrayList<BlockPos> result = new ArrayList<>();
-        int radius = npc.getWorkRadius();
+        int radiusX = npc.getWorkingRadius().getXRadius();
+        int radiusY = npc.getWorkingRadius().getYRadius();
+        int radiusZ = npc.getWorkingRadius().getZRadius();
         World world = npc.getEntityWorld();
-        for(int x=-radius;x<=radius;x++){
-            for(int y=-radius;y<=radius;y++){
-                for(int z=-radius;z<=radius;z++){
+        for(int x=-radiusX;x<=radiusX;x++){
+            for(int y=-radiusY;y<=radiusY;y++){
+                for(int z=-radiusZ;z<=radiusZ;z++){
                     BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getTileEntity(toCheck) != null){
                         if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
@@ -557,6 +577,406 @@ public class FunctionHelper {
             if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
                 if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof AxeItem){
                     ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c);
+                    result.add(itemEntry);
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<BlockPos> getLogsToHarvest(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result=new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int z=-zRadius;z<=zRadius;z++){
+                for(int y=-yRadius;y<=yRadius;y++){
+                    BlockPos toCheck=new BlockPos(npc.getHomePosition().getX()+x,npc.getHomePosition().getY()+y,npc.getHomePosition().getZ()+z);
+                    Block blockToCheck = world.getBlockState(toCheck).getBlock();
+                    if(npc.LOGS_ALLOWED.contains(blockToCheck)){
+                        result.add(toCheck);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public BlockPos getNearestTree(EntityAutoLumberjack npc,ArrayList<BlockPos> logs){
+        BlockPos result=logs.get(0);
+        int constantY=60;
+        for(BlockPos toCheck:logs){
+            Vec3d resultVecPos = new Vec3d(result.getX(),constantY,result.getZ());
+            Vec3d toCheckVecPos = new Vec3d(toCheck.getX(),constantY,toCheck.getZ());
+            if(npc.getDistanceSq(toCheckVecPos)<npc.getDistanceSq(resultVecPos)){
+                result=toCheck;
+            }
+        }
+        return result;
+    }
+
+    public Block getSaplingFromLogBlock(Block block){
+        Block result = Blocks.OAK_SAPLING;
+        if(block==Blocks.ACACIA_LOG){
+            result=Blocks.ACACIA_SAPLING;
+        }
+        if(block==Blocks.BIRCH_LOG){
+            result=Blocks.BIRCH_SAPLING;
+        }
+        if(block==Blocks.DARK_OAK_LOG){
+            result=Blocks.DARK_OAK_SAPLING;
+        }
+        if(block==Blocks.JUNGLE_LOG){
+            result=Blocks.JUNGLE_SAPLING;
+        }
+        if(block==Blocks.SPRUCE_LOG){
+            result=Blocks.SPRUCE_SAPLING;
+        }
+        return result;
+    }
+
+    public boolean isInInventoryLumberjack(EntityAutoLumberjack npc, Item item){
+        boolean result=false;
+        for(int c=0;c<=npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem()==item){
+                    result=true;
+                }
+            }
+        }
+        return result;
+    }
+
+    public ItemWithInventoryIndexEntry getItemWithInventoryIndexLumberjack(EntityAutoLumberjack npc,Item item){
+        ItemWithInventoryIndexEntry result=null;
+        for(int c=0;c<=npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                Item toCheck = npc.getLocalInventory().getStackInSlot(c).getItem();
+                if(toCheck==item){
+                    result = new ItemWithInventoryIndexEntry(toCheck,c);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ArrayList<BlockPos> getChestPosesWithFreeSlotsLumberjack(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result = new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        ArrayList<BlockPos> allChests = new ArrayList<>();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck)!=null){
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            allChests.add(toCheck);
+                        }
+                    }
+                }
+            }
+        }
+
+        if(!allChests.isEmpty()){
+            for(BlockPos toCheck:allChests){
+                ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                for(int c=0;c<=15;c++){
+                    if(chest.getStackInSlot(c).isEmpty()){
+                        result.add(toCheck);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ArrayList<ItemWithInventoryIndexEntry> getExcessItemsLumberjack(EntityAutoLumberjack npc){
+        ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
+        boolean areOakSaplingsThere=false;
+        boolean areAcaciaSaplingsThere=false;
+        boolean areDarkOakSaplingsThere=false;
+        boolean areBirchSaplingsThere=false;
+        boolean areSpruceSaplingsThere=false;
+        boolean areJungleSaplingsThere=false;
+        boolean isBoneMealHere=false;
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
+                if((!areOakSaplingsThere ) && item==Items.OAK_SAPLING){
+                    areOakSaplingsThere=true;
+                }
+                else if((!areAcaciaSaplingsThere ) && item == Items.ACACIA_SAPLING){
+                    areAcaciaSaplingsThere=true;
+                }
+                else if((!areDarkOakSaplingsThere ) && item==Items.DARK_OAK_SAPLING){
+                    areDarkOakSaplingsThere=true;
+                }
+                else if((!areBirchSaplingsThere ) && item==Items.BIRCH_SAPLING){
+                    areBirchSaplingsThere=true;
+                }
+                else if((!areSpruceSaplingsThere ) && item==Items.SPRUCE_SAPLING){
+                    areSpruceSaplingsThere=true;
+                }
+                else if((!areJungleSaplingsThere ) && item==Items.JUNGLE_SAPLING){
+                    areJungleSaplingsThere=true;
+                }
+                else if((!isBoneMealHere ) && item==Items.BONE_MEAL){
+                    isBoneMealHere=true;
+                }
+                else if(item instanceof AxeItem){
+                    //do nothing
+                }
+                else{
+                    result.add(new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c));
+                }
+            }
+
+        }
+        return result;
+    }
+
+    public BlockPos getNearestChestPosLumberjack(EntityAutoLumberjack npc, ArrayList<BlockPos> chestPoses){
+        BlockPos result = chestPoses.get(0);
+        for(BlockPos toCheck:chestPoses){
+            Vec3i farmerPos = new Vec3i(Math.abs(npc.getPosition().getX()),Math.abs(npc.getPosition().getY()),Math.abs(npc.getPosition().getZ()));
+            Vec3i toCheckPos = new Vec3i(Math.abs(toCheck.getX()),Math.abs(toCheck.getY()),Math.abs(toCheck.getZ()));
+            Vec3i resultPos = new Vec3i(Math.abs(result.getX()),Math.abs(result.getY()),Math.abs(result.getZ()));
+            if(farmerPos.distanceSq(toCheckPos)<farmerPos.distanceSq(resultPos)) {
+                result = toCheck;
+            }
+        }
+        return result;
+    }
+
+    public boolean isBoneMealInInventoryLumberjack(EntityAutoLumberjack farmer){
+        boolean isBoneMealHere=false;
+        for(int c=0;c<farmer.getLocalInventory().getSizeInventory();c++){
+            if(!farmer.getLocalInventory().getStackInSlot(c).isEmpty()) {
+                Item item = farmer.getLocalInventory().getStackInSlot(c).getItem();
+                if (item==Items.BONE_MEAL) {
+                    isBoneMealHere = true;
+                }
+            }
+        }
+        return isBoneMealHere;
+    }
+
+    public ArrayList<BlockPos> getFertilizableSaplings(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result=new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getBlockState(toCheck).getBlock() instanceof SaplingBlock){
+                        result.add(toCheck);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<ItemWithInventoryIndexEntry> getBoneMealWithIndexesInInventoryLumberjack(Inventory localInventory){
+        ArrayList<ItemWithInventoryIndexEntry> result=new ArrayList<>();
+        for(int c=0;c<localInventory.getSizeInventory();c++){
+            if(!localInventory.getStackInSlot(c).isEmpty()){
+                if(localInventory.getStackInSlot(c).getItem()==Items.BONE_MEAL){
+                    ItemWithInventoryIndexEntry entry = new ItemWithInventoryIndexEntry(localInventory.getStackInSlot(c).getItem(),c);
+                    result.add(entry);
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<BlockPos> chestPosesWithBonemealLumberjack(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result = new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck)!=null){
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                            for(int c=0;c<=15;c++){
+                                if(!chest.getStackInSlot(c).isEmpty()){
+                                    Item item = chest.getStackInSlot(c).getItem();
+                                    if(item == Items.BONE_MEAL){
+                                        result.add(toCheck);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public boolean areAllSaplingsOfInterestInInventory(EntityAutoLumberjack jack){
+        boolean birchHere=false;
+        boolean oakHere=false;
+        boolean darkOakHere=false;
+        boolean acaciaHere=false;
+        boolean jungleHere=false;
+        boolean spruceHere=false;
+        for(int c=0;c<jack.getLocalInventory().getSizeInventory();c++){
+            if(!jack.getLocalInventory().getStackInSlot(c).isEmpty()) {
+                Item item = jack.getLocalInventory().getStackInSlot(c).getItem();
+                if(item==Items.JUNGLE_SAPLING || !jack.SAPLINGS.contains(item) ) {jungleHere=true;}
+                if(item==Items.SPRUCE_SAPLING || !jack.SAPLINGS.contains(item)) {spruceHere=true;}
+                if(item==Items.BIRCH_SAPLING || !jack.SAPLINGS.contains(item)) {birchHere=true;}
+                if(item==Items.DARK_OAK_SAPLING || !jack.SAPLINGS.contains(item)) {darkOakHere=true;}
+                if(item==Items.ACACIA_SAPLING || !jack.SAPLINGS.contains(item)) {acaciaHere=true;}
+                if(item==Items.OAK_SAPLING || !jack.SAPLINGS.contains(item)) {oakHere=true;}
+
+            }
+        }
+        return birchHere&&oakHere&&darkOakHere&&acaciaHere&&jungleHere&&spruceHere;
+    }
+
+    public ArrayList<BlockPos> chestPosesWithSaplingsThatAreNotInInventoryButAreInInterest(EntityAutoLumberjack NPC){
+        ArrayList<BlockPos> result=new ArrayList<>();
+        boolean hasOak=false;
+        boolean hasBirch=false;
+        boolean hasSpruce=false;
+        boolean hasJungle=false;
+        boolean hasAcacia=false;
+        boolean hasDarkOak=false;
+        for(int c=0;c<NPC.getLocalInventory().getSizeInventory();c++){
+            if(!NPC.getLocalInventory().getStackInSlot(c).isEmpty()) {
+                Item item = NPC.getLocalInventory().getStackInSlot(c).getItem();
+                if(item==Items.JUNGLE_SAPLING) {hasJungle=true;}
+                if(item==Items.ACACIA_SAPLING) {hasAcacia=true;}
+                if(item==Items.OAK_SAPLING) {hasOak=true;}
+                if(item==Items.DARK_OAK_SAPLING) {hasDarkOak=true;}
+                if(item==Items.BIRCH_SAPLING) {hasBirch=true;}
+                if(item==Items.SPRUCE_SAPLING) {hasSpruce=true;}
+
+            }
+        }
+
+        World world = NPC.getEntityWorld();
+        int xRadius=NPC.getWorkingRadius().getXRadius();
+        int yRadius=NPC.getWorkingRadius().getYRadius();
+        int zRadius=NPC.getWorkingRadius().getZRadius();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck = new BlockPos(NPC.getPosition().getX()+x,NPC.getPosition().getY()+y,NPC.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck)!=null){
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                            for(int c=0;c<=15;c++){
+                                if(!chest.getStackInSlot(c).isEmpty()){
+                                    Item item = chest.getStackInSlot(c).getItem();
+                                    if(item == Items.JUNGLE_SAPLING){
+                                        if(!hasJungle){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                    if(item == Items.OAK_SAPLING){
+                                        if(!hasOak){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                    if(item == Items.DARK_OAK_SAPLING){
+                                        if(!hasDarkOak){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                    if(item == Items.ACACIA_SAPLING){
+                                        if(!hasAcacia){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                    if(item == Items.JUNGLE_SAPLING){
+                                        if(!hasJungle){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                    if(item == Items.SPRUCE_SAPLING){
+                                        if(!hasSpruce){
+                                            result.add(toCheck);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public boolean areAnySaplingsInInventory(EntityAutoLumberjack npc){
+        boolean result=false;
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
+                if(npc.SAPLINGS.contains(item)){
+                    result=true;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ArrayList<BlockPos> getEmptyPlantPlaces(EntityAutoLumberjack npc){
+        ArrayList<BlockPos> result=new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++){
+                    BlockPos toCheck=new BlockPos(npc.getHomePosition().getX()+x,npc.getHomePosition().getY()+y,npc.getHomePosition().getZ()+z);
+                    Block blockToCheck = world.getBlockState(toCheck).getBlock();
+                    if(blockToCheck==Blocks.GRASS_BLOCK||blockToCheck==Blocks.COARSE_DIRT||blockToCheck==Blocks.PODZOL||
+                    blockToCheck==Blocks.DIRT){
+                            if(world.isAirBlock(toCheck.up())){
+                                if(world.isAirBlock(toCheck.up(2))){
+                                    if(world.isAirBlock(toCheck.up(3))) {
+                                        result.add(toCheck);
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<ItemWithInventoryIndexEntry> getSaplingsWithInventoryIndexes(EntityAutoLumberjack npc){
+        ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                Item item = npc.getLocalInventory().getStackInSlot(c).getItem();
+                if(npc.SAPLINGS.contains(item)){
+                    ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(item,c);
                     result.add(itemEntry);
                 }
             }
