@@ -13,6 +13,7 @@ import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.Heightmap;
 import org.antlr.v4.runtime.misc.Array2DHashSet;
 
 import java.util.ArrayList;
@@ -60,13 +61,21 @@ public class FunctionHelper {
         for(int c=0;c<farmer.getLocalInventory().getSizeInventory();c++){
             if(!farmer.getLocalInventory().getStackInSlot(c).isEmpty()) {
                 Item item = farmer.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.CARROT || !farmer.SEEDS.contains(item) ) {areCarrotsHere=true;}
-                if(item==Items.POTATO || !farmer.SEEDS.contains(item)) {arePotatoesHere=true;}
-                if(item==Items.WHEAT_SEEDS || !farmer.SEEDS.contains(item)) {areWheatSeedsHere=true;}
-                if(item==Items.BEETROOT_SEEDS || !farmer.SEEDS.contains(item)) {areBeetrotsSeedsHere=true;}
+                if(item==Items.CARROT || (isSeedAtAll(item) && !farmer.SEEDS.contains(item)) ) {areCarrotsHere=true;}
+                if(item==Items.POTATO || (isSeedAtAll(item) && !farmer.SEEDS.contains(item))) {arePotatoesHere=true;}
+                if(item==Items.WHEAT_SEEDS || (isSeedAtAll(item) && !farmer.SEEDS.contains(item))) {areWheatSeedsHere=true;}
+                if(item==Items.BEETROOT_SEEDS || (isSeedAtAll(item) && !farmer.SEEDS.contains(item))) {areBeetrotsSeedsHere=true;}
             }
         }
         return areCarrotsHere&&areWheatSeedsHere&&arePotatoesHere&&areBeetrotsSeedsHere;
+    }
+
+    private boolean isSeedAtAll(Item item){
+        boolean result=false;
+        if(item==Items.CARROT||item==Items.POTATO||item==Items.WHEAT_SEEDS||item==Items.BEETROOT_SEEDS){
+            result=true;
+        }
+        return result;
     }
 
     public boolean isBoneMealInInventory(EntityAutoFarmer farmer){
@@ -527,7 +536,10 @@ public class FunctionHelper {
         if(!e.isEmpty()){
             for(ItemEntity item:e){
                 if(npc.ITEMS_OF_INTEREST.contains(item.getItem().getItem()) || item.getItem().getItem() instanceof AxeItem) {
-                    result.add(item);
+                    int posY=npc.getEntityWorld().getHeight(Heightmap.Type.WORLD_SURFACE,item.getPosition()).getY();
+                    if((item.getPosition().getY()-posY)<5) {
+                        result.add(item);
+                    }
                 }
             }
         }
@@ -596,7 +608,9 @@ public class FunctionHelper {
                     BlockPos toCheck=new BlockPos(npc.getHomePosition().getX()+x,npc.getHomePosition().getY()+y,npc.getHomePosition().getZ()+z);
                     Block blockToCheck = world.getBlockState(toCheck).getBlock();
                     if(npc.LOGS_ALLOWED.contains(blockToCheck)){
-                        result.add(toCheck);
+                        if((toCheck.getY()-npc.getPosition().getY())<12) {
+                            result.add(toCheck);
+                        }
                     }
                 }
             }
@@ -839,17 +853,25 @@ public class FunctionHelper {
         boolean spruceHere=false;
         for(int c=0;c<jack.getLocalInventory().getSizeInventory();c++){
             if(!jack.getLocalInventory().getStackInSlot(c).isEmpty()) {
-                Item item = jack.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.JUNGLE_SAPLING || !jack.SAPLINGS.contains(item) ) {jungleHere=true;}
-                if(item==Items.SPRUCE_SAPLING || !jack.SAPLINGS.contains(item)) {spruceHere=true;}
-                if(item==Items.BIRCH_SAPLING || !jack.SAPLINGS.contains(item)) {birchHere=true;}
-                if(item==Items.DARK_OAK_SAPLING || !jack.SAPLINGS.contains(item)) {darkOakHere=true;}
-                if(item==Items.ACACIA_SAPLING || !jack.SAPLINGS.contains(item)) {acaciaHere=true;}
-                if(item==Items.OAK_SAPLING || !jack.SAPLINGS.contains(item)) {oakHere=true;}
-
+                Item item = jack.getLocalInventory().getStackInSlot(c).getItem().asItem();
+                if(item==Items.JUNGLE_SAPLING || (isSaplingAtAll(item) && !jack.SAPLINGS.contains(item)) ) {jungleHere=true;}
+                if(item==Items.SPRUCE_SAPLING || (isSaplingAtAll(item) && !jack.SAPLINGS.contains(item))) {spruceHere=true;}
+                if(item==Items.BIRCH_SAPLING || (isSaplingAtAll(item) && jack.SAPLINGS.contains(item))) {birchHere=true;}
+                if(item==Items.DARK_OAK_SAPLING || (isSaplingAtAll(item) && !jack.SAPLINGS.contains(item))) {darkOakHere=true;}
+                if(item==Items.ACACIA_SAPLING || (isSaplingAtAll(item) && !jack.SAPLINGS.contains(item))) {acaciaHere=true;}
+                if(item==Items.OAK_SAPLING || (isSaplingAtAll(item) && !jack.SAPLINGS.contains(item))) {oakHere=true;}
             }
         }
         return birchHere&&oakHere&&darkOakHere&&acaciaHere&&jungleHere&&spruceHere;
+    }
+
+    private boolean isSaplingAtAll(Item item){
+        boolean result=false;
+        if(item==Items.JUNGLE_SAPLING||item==Items.SPRUCE_SAPLING||item==Items.BIRCH_SAPLING
+            || item==Items.DARK_OAK_SAPLING || item==Items.ACACIA_SAPLING ||item==Items.OAK_SAPLING){
+            result=true;
+        }
+        return result;
     }
 
     public ArrayList<BlockPos> chestPosesWithSaplingsThatAreNotInInventoryButAreInInterest(EntityAutoLumberjack NPC){
@@ -863,12 +885,12 @@ public class FunctionHelper {
         for(int c=0;c<NPC.getLocalInventory().getSizeInventory();c++){
             if(!NPC.getLocalInventory().getStackInSlot(c).isEmpty()) {
                 Item item = NPC.getLocalInventory().getStackInSlot(c).getItem();
-                if(item==Items.JUNGLE_SAPLING) {hasJungle=true;}
-                if(item==Items.ACACIA_SAPLING) {hasAcacia=true;}
-                if(item==Items.OAK_SAPLING) {hasOak=true;}
-                if(item==Items.DARK_OAK_SAPLING) {hasDarkOak=true;}
-                if(item==Items.BIRCH_SAPLING) {hasBirch=true;}
-                if(item==Items.SPRUCE_SAPLING) {hasSpruce=true;}
+                if(item==Item.getItemFromBlock(Blocks.JUNGLE_SAPLING)) {hasJungle=true;}
+                if(item==Item.getItemFromBlock(Blocks.ACACIA_SAPLING)) {hasAcacia=true;}
+                if(item==Item.getItemFromBlock(Blocks.OAK_SAPLING)) {hasOak=true;}
+                if(item==Item.getItemFromBlock(Blocks.DARK_OAK_SAPLING)) {hasDarkOak=true;}
+                if(item==Item.getItemFromBlock(Blocks.BIRCH_SAPLING)) {hasBirch=true;}
+                if(item==Item.getItemFromBlock(Blocks.SPRUCE_SAPLING)) {hasSpruce=true;}
 
             }
         }
@@ -902,13 +924,13 @@ public class FunctionHelper {
                                             result.add(toCheck);
                                         }
                                     }
-                                    if(item == Items.ACACIA_SAPLING){
-                                        if(!hasAcacia){
+                                    if(item == Items.BIRCH_SAPLING){
+                                        if(!hasBirch){
                                             result.add(toCheck);
                                         }
                                     }
-                                    if(item == Items.JUNGLE_SAPLING){
-                                        if(!hasJungle){
+                                    if(item == Items.ACACIA_SAPLING){
+                                        if(!hasAcacia){
                                             result.add(toCheck);
                                         }
                                     }

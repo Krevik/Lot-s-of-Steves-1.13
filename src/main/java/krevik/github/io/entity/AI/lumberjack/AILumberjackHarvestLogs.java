@@ -5,25 +5,19 @@ import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
 import net.minecraft.block.*;
-import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SChangeBlockPacket;
 import net.minecraft.potion.EffectUtils;
 import net.minecraft.potion.Effects;
-import net.minecraft.server.management.PlayerInteractionManager;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.CachedBlockInfo;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameType;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
@@ -60,7 +54,7 @@ public class AILumberjackHarvestLogs extends Goal{
         actualDelay++;
         if(actualDelay>=runDelay){
             LOGS_POSITIONS = helper.getLogsToHarvest(NPC);
-            if(!LOGS_POSITIONS.isEmpty()){
+            if(!LOGS_POSITIONS.isEmpty() && !(NPC.getRNG().nextInt(200)==0)){
                 return true;
             }
             actualDelay=0;
@@ -87,6 +81,7 @@ public class AILumberjackHarvestLogs extends Goal{
     public void tick() {
         if(destinationBlock!=null){
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
+            NPC.getLookController().setLookPosition(destinationBlock.getX(),destinationBlock.getY(),destinationBlock.getZ(),1,1);
             pathTimer++;
             if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){
                 if(pathTimer>getPathTimerTimeout()&& !getIsNearDestination()){
@@ -101,14 +96,11 @@ public class AILumberjackHarvestLogs extends Goal{
                         BlockState harvestBlockState = world.getBlockState(positionToHarvest);
                         Block blockToHarvest = harvestBlockState.getBlock();
                         Block saplingToReplant = helper.getSaplingFromLogBlock(blockToHarvest);
-                        int i1 =  30;
-                        float f = harvestBlockState.getBlockHardness(NPC.getEntityWorld(),positionToHarvest) * (float)(i1 + 1);
-                        float i2 = getDigSpeed(NPC,harvestBlockState,positionToHarvest) / f / (float)i1;
-                        desiredDiggingTime=5;
-                        NPC.world.sendBlockBreakProgress(NPC.getEntityId(),positionToHarvest,actualDiggingTime);
+                        desiredDiggingTime=digDig(harvestBlockState,positionToHarvest);
+                        //NPC.world.sendBlockBreakProgress(NPC.getEntityId(),positionToHarvest,actualDiggingTime);
+                        //actualDiggingTime++;
                             NPC.setActiveHand(Hand.MAIN_HAND);
                             NPC.swingArm(Hand.MAIN_HAND);
-                        actualDiggingTime++;
                         //destroy block
                         if(actualDiggingTime>=desiredDiggingTime){
                             world.destroyBlock(positionToHarvest,true);
@@ -117,7 +109,7 @@ public class AILumberjackHarvestLogs extends Goal{
                             //damage item experimental
                             PlayerEntity player = NPC.getEntityWorld().getClosestPlayer(NPC.getPosition().getX(),NPC.getPosition().getY(),NPC.getPosition().getZ());
                             if(player!=null){
-                                NPC.getHeldItem(Hand.MAIN_HAND).damageItem(1, player, (p_220045_0_) -> {
+                                NPC.getHeldItem(Hand.MAIN_HAND).damageItem(1, NPC, (p_220045_0_) -> {
                                     p_220045_0_.sendBreakAnimation(EquipmentSlotType.MAINHAND);
                                 });
                             }
@@ -132,7 +124,7 @@ public class AILumberjackHarvestLogs extends Goal{
                                         world.getBlockState(positionToHarvest.down()).getBlock() == Blocks.COARSE_DIRT)
                                 {
                                     ItemWithInventoryIndexEntry saplingEntry = helper.getItemWithInventoryIndexLumberjack(NPC,Item.getItemFromBlock(saplingToReplant));
-                                    world.setBlockState(positionToHarvest.down(),saplingToReplant.getDefaultState());
+                                    world.setBlockState(positionToHarvest,saplingToReplant.getDefaultState());
                                     NPC.getLocalInventory().getStackInSlot(saplingEntry.getInventoryIndex()).shrink(1);
                                 }
                             }
@@ -154,15 +146,32 @@ public class AILumberjackHarvestLogs extends Goal{
 
 
     public double getTargetDistanceSq() {
-        return 6D;
+        return 60D;
+    }
+
+    public double getTargetDistanceSqExtended() {
+        return 120D;
     }
 
     protected boolean getIsNearDestination() {
         if (this.NPC.getDistanceSq(this.destinationBlock.getX(),NPC.getPosition().getY(),this.destinationBlock.getZ()) > this.getTargetDistanceSq()) {
+            if((destinationBlock.getY()-NPC.getPosition().getY())>5){
+                if(this.NPC.getDistanceSq(this.destinationBlock.getX(),NPC.getPosition().getY(),this.destinationBlock.getZ()) > this.getTargetDistanceSqExtended()){
+                    return false;
+                }else{
+                    return true;
+                }
+            }
             return false;
         } else {
             return true;
         }
+    }
+
+    private float digDig(BlockState state, BlockPos pos) {
+        actualDiggingTime++;
+        this.world.sendBlockBreakProgress(this.NPC.getEntityId(), pos, (int)(actualDiggingTime/1.5));
+        return MathHelper.clamp(state.getBlockHardness(NPC.getEntityWorld(),pos)*12-(getDigSpeed(NPC,state,pos)*2),5,50);
     }
 
     public float getDigSpeed(EntityAutoLumberjack npc, BlockState state, @Nullable BlockPos pos) {
@@ -178,38 +187,6 @@ public class AILumberjackHarvestLogs extends Goal{
             if (i > 0 && !itemstack.isEmpty()) {
                 f += (float)(i * i + 1);
             }
-        }
-
-        if (EffectUtils.hasMiningSpeedup(npc)) {
-            f *= 1.0F + (float)(EffectUtils.getMiningSpeedup(npc) + 1) * 0.2F;
-        }
-
-        if (npc.isPotionActive(Effects.MINING_FATIGUE)) {
-            float f1;
-            switch(npc.getActivePotionEffect(Effects.MINING_FATIGUE).getAmplifier()) {
-                case 0:
-                    f1 = 0.3F;
-                    break;
-                case 1:
-                    f1 = 0.09F;
-                    break;
-                case 2:
-                    f1 = 0.0027F;
-                    break;
-                case 3:
-                default:
-                    f1 = 8.1E-4F;
-            }
-
-            f *= f1;
-        }
-
-        if (npc.areEyesInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(npc)) {
-            f /= 5.0F;
-        }
-
-        if (!npc.onGround) {
-            f /= 5.0F;
         }
         return f;
     }

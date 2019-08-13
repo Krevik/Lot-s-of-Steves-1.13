@@ -21,6 +21,7 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
@@ -216,6 +217,10 @@ public class EntityAutoFarmer extends AnimalEntity {
             }
         }
         tag.put("Inventory", nbttaglist);
+
+        tag.putDouble("homeX",getHomePosition().getX());
+        tag.putDouble("homeY",getHomePosition().getY());
+        tag.putDouble("homeZ",getHomePosition().getZ());
     }
 
     @Override
@@ -230,5 +235,6 @@ public class EntityAutoFarmer extends AnimalEntity {
                 this.localInventory.addItem(itemstack);
             }
         }
+        setHomePosAndDistance(new BlockPos(tag.getDouble("homeX"),tag.getDouble("homeY"),tag.getDouble("homeZ")),30);
     }
 }

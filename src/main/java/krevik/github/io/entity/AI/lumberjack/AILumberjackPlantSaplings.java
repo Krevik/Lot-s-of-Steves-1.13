@@ -31,8 +31,8 @@ public class AILumberjackPlantSaplings extends Goal {
         NPC=npc;
         runDelay=100;
         actualDelay=0;
-        helper= LotsOfSteves.getHelper();
-        emptyPlantPlaces =new ArrayList<>();
+        helper=LotsOfSteves.getHelper();
+        emptyPlantPlaces=new ArrayList<>();
         this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;

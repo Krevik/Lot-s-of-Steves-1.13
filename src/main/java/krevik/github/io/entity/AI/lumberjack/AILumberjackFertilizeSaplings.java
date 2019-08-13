@@ -82,10 +82,12 @@ public class AILumberjackFertilizeSaplings extends Goal {
                             if (!bonemealEntries.isEmpty()) {
                                 ItemWithInventoryIndexEntry itemEntry = bonemealEntries.get(NPC.getRNG().nextInt(bonemealEntries.size()));
                                         if (!world.isRemote) {
-                                            world.playEvent(2005, FertilizableSaplings.get(0).up(), 0);
+                                            world.playEvent(2005, FertilizableSaplings.get(0), 0);
                                         }
-                                        ((SaplingBlock) world.getBlockState(FertilizableSaplings.get(0).up()).getBlock()).grow(world, FertilizableSaplings.get(0).up(), world.getBlockState(FertilizableSaplings.get(0).up()),NPC.getRNG());
-                                        NPC.getLocalInventory().getStackInSlot(itemEntry.getInventoryIndex()).shrink(1);
+                                        if(world.getBlockState(FertilizableSaplings.get(0)).getBlock() instanceof SaplingBlock) {
+                                            ((SaplingBlock) world.getBlockState(FertilizableSaplings.get(0)).getBlock()).grow(world, FertilizableSaplings.get(0), world.getBlockState(FertilizableSaplings.get(0)), NPC.getRNG());
+                                            NPC.getLocalInventory().getStackInSlot(itemEntry.getInventoryIndex()).shrink(1);
+                                        }
                             }
                         }
                 }

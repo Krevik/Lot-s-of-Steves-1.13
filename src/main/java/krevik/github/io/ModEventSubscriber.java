@@ -52,7 +52,8 @@ public final class ModEventSubscriber {
     public static void onRegisterItems(final RegistryEvent.Register<Item> event){
         final IForgeRegistry<Item> registry = event.getRegistry();
         event.getRegistry().registerAll(
-                setup(new Item(new Item.Properties()), "multi_crop")
+                setup(new Item(new Item.Properties()), "multi_crop"),
+                setup(new Item(new Item.Properties()), "multi_sapling")
         );
         for (final Block block : ModUtil.getModEntries(ForgeRegistries.BLOCKS)) {
             registry.register(setup(new BlockItem(block, new Item.Properties().group(ItemGroup.REDSTONE)), block.getRegistryName()));

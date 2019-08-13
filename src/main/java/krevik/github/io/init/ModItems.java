@@ -9,4 +9,5 @@ import net.minecraftforge.registries.ObjectHolder;
 @ObjectHolder(ModReference.MOD_ID)
 public class ModItems {
     public static final Item MULTI_CROP = ModUtil._null();
+    public static final Item MULTI_SAPLING = ModUtil._null();
 }

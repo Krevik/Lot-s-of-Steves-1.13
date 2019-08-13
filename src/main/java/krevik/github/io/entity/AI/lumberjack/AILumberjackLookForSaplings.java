@@ -4,6 +4,8 @@ import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
 import krevik.github.io.util.FunctionHelper;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.LeavesBlock;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -85,24 +87,12 @@ public class AILumberjackLookForSaplings extends Goal {
                         for(int c=0;c<NPC.getLocalInventory().getSizeInventory();c++){
                             if(!NPC.getLocalInventory().getStackInSlot(c).isEmpty()){
                                 Item item = NPC.getLocalInventory().getStackInSlot(c).getItem();
-                                if(item == Items.ACACIA_SAPLING){
-                                    hasAcacia=true;
-                                }
-                                if(item == Items.OAK_SAPLING){
-                                    hasOak = true;
-                                }
-                                if(item == Items.DARK_OAK_SAPLING){
-                                    hasDarkOak = true;
-                                }
-                                if(item == Items.JUNGLE_SAPLING){
-                                    hasJungle=true;
-                                }
-                                if(item == Items.SPRUCE_SAPLING){
-                                    hasSpruce=true;
-                                }
-                                if(item == Items.BIRCH_SAPLING){
-                                    hasBirch=true;
-                                }
+                                if(item==Items.JUNGLE_SAPLING) {hasJungle=true;}
+                                if(item==Items.ACACIA_SAPLING) {hasAcacia=true;}
+                                if(item==Items.OAK_SAPLING) {hasOak=true;}
+                                if(item==Items.DARK_OAK_SAPLING) {hasDarkOak=true;}
+                                if(item==Items.BIRCH_SAPLING) {hasBirch=true;}
+                                if(item==Items.SPRUCE_SAPLING) {hasSpruce=true;}
                             }
                         }
                         for(int c=0;c<=15;c++){
