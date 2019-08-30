@@ -793,12 +793,34 @@ public class FunctionHelper {
                 for(int z=-zRadius;z<=zRadius;z++){
                     BlockPos toCheck=new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
                     if(world.getBlockState(toCheck).getBlock() instanceof SaplingBlock){
-                        result.add(toCheck);
+                        if(world.getBlockState(toCheck).getBlock() == Blocks.DARK_OAK_SAPLING){
+                            if(are3ExactSaplingsAround(npc,toCheck)){
+                                result.add(toCheck);
+                            }
+                        }else {
+                            result.add(toCheck);
+                        }
                     }
                 }
             }
         }
         return result;
+    }
+
+    private boolean are3ExactSaplingsAround(EntityAutoLumberjack npc, BlockPos pos){
+        boolean are=false;
+        World world = npc.getEntityWorld();
+        BlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        int counter=0;
+        if(world.getBlockState(pos.east()).getBlock()==block)counter++;
+        if(world.getBlockState(pos.west()).getBlock()==block)counter++;
+        if(world.getBlockState(pos.south()).getBlock()==block)counter++;
+        if(world.getBlockState(pos.north()).getBlock()==block)counter++;
+        if(counter>=3){
+            are=true;
+        }
+        return are;
     }
 
     public ArrayList<ItemWithInventoryIndexEntry> getBoneMealWithIndexesInInventoryLumberjack(Inventory localInventory){
@@ -1005,4 +1027,9 @@ public class FunctionHelper {
         }
         return result;
     }
+
+    //--------------------------------------------------------LUMBERJACK END----------------------------------------------------
+
+    //--------------------------------------------------------MINER START-------------------------------------------------------
+
 }

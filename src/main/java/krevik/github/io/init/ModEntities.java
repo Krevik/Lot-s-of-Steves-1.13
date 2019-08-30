@@ -9,4 +9,5 @@ import net.minecraftforge.registries.ObjectHolder;
 public class ModEntities {
     public static EntityType<?> ENTITY_AUTO_FARMER = ModUtil._null();
     public static EntityType<?> ENTITY_AUTO_LUMBERJACK = ModUtil._null();
+    public static EntityType<?> ENTITY_MINER = ModUtil._null();
 }
