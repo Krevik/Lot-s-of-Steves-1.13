@@ -69,6 +69,7 @@ public class AILumberjackCollectLoot extends Goal {
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setWhatIAmActuallyDoing("Collecting Loot");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5,destinationBlock.getY()+1,destinationBlock.getZ()+0.5,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){

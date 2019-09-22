@@ -1,5 +1,6 @@
 package krevik.github.io.entity;
 
+import krevik.github.io.entity.AI.miner.GoalDoStairs;
 import krevik.github.io.init.ModEntities;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
@@ -16,10 +17,12 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 
 public class EntityMiner extends AnimalEntity {
 
     private final Inventory localInventory = new Inventory(64);
+    private int[][][] stairsPattern = new int[4][256][4];
     public EntityMiner(World world) {
         super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_MINER, world);
         setAIMoveSpeed(1f);
@@ -30,6 +33,86 @@ public class EntityMiner extends AnimalEntity {
         super(entityAutoFarmerEntityType, world);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
+    }
+
+    private void clearAndInitializeStairsPattern(){
+        stairsPattern = new int[4][256][4];
+        /*for(int i1=0;i1<=10;i1++){
+            for(int i2=0;i2<=10;i2++){
+                for(int i3=0;i3<=10;i3++){
+                    stairsPattern[i1][i2][i3]=0;
+                }
+            }
+        }*/
+        for(int i1=0;i1<=3;i1++){
+            for(int i2=0;i2<256;i2++){
+                for(int i3=0;i3<=3;i3++){
+                    stairsPattern[i1][i2][i3]=0;
+                }
+            }
+        }
+        makeHolePattern();
+    }
+
+    public int[][][] getStairsPattern() {
+        clearAndInitializeStairsPattern();
+        return stairsPattern;
+    }
+
+    private ArrayList<Integer> getActualYRangeStairs(int height){
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for(int x=0;x<5;x++){
+            result.add(height+x);
+        }
+        return result;
+    }
+
+    private void makeStairsPatternX(){
+        for(int i1=0;i1<=10;i1++){
+            for(int i2=0;i2<=10;i2++){
+                ArrayList<Integer> actualYRange = getActualYRangeStairs(i1);
+                for(int i3=0;i3<=10;i3++){
+                   if(actualYRange.contains(i2)){
+                       stairsPattern[i1][i2][i3]=1;
+                   }
+                }
+            }
+        }
+    }
+
+    private void makeHolePattern(){
+        int switcher=1;
+            for(int y=255;y>8;y--){
+                switcher++;
+                if(switcher>=13){
+                    switcher=1;
+                }
+                for(int z=0;z<=3;z++){
+                    for(int x=0;x<=3;x++){
+                    if(shouldPlaceStairBlockAt(switcher,x,z)) {
+                        stairsPattern[x][y][z] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean shouldPlaceStairBlockAt(int switcher, int x,int z){
+        boolean result=false;
+        if(switcher==1&&x==0&&z==0) result=true;
+        if(switcher==2&&x==1&&z==0) result=true;
+        if(switcher==3&&x==2&&z==0) result=true;
+        if(switcher==4&&x==3&&z==0) result=true;
+        if(switcher==5&&x==3&&z==1) result=true;
+        if(switcher==6&&x==3&&z==2) result=true;
+        if(switcher==7&&x==3&&z==3) result=true;
+        if(switcher==8&&x==2&&z==3) result=true;
+        if(switcher==9&&x==1&&z==3) result=true;
+        if(switcher==10&&x==0&&z==3) result=true;
+        if(switcher==11&&x==0&&z==2) result=true;
+        if(switcher==12&&x==0&&z==1) result=true;
+
+        return result;
     }
 
 
@@ -72,7 +155,7 @@ public class EntityMiner extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-
+        goalSelector.addGoal(1,new GoalDoStairs(this));
     }
 
     public Inventory getLocalInventory() {

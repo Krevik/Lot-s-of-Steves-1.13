@@ -69,6 +69,7 @@ public class EntityAIHarvestFarmland extends Goal {
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setWhatIAmActuallyDoing("Harvesting");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){

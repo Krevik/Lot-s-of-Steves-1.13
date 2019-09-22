@@ -42,8 +42,7 @@ public class EntityAutoLumberjack extends AnimalEntity {
     public ArrayList<Item> ITEMS_OF_INTEREST = new ArrayList<>();
     public ArrayList<Item> SAPLINGS = new ArrayList<>();
     private WorkingRadius workingRadius;
-
-
+    private String whatIAmActuallyDoing;
 
     public EntityAutoLumberjack(World p_i48568_2_) {
         super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_AUTO_LUMBERJACK, p_i48568_2_);
@@ -119,6 +118,14 @@ public class EntityAutoLumberjack extends AnimalEntity {
                 world.addEntity(itemEntity);
             }
         }
+    }
+
+    public String getWhatIAmActuallyDoing() {
+        return whatIAmActuallyDoing;
+    }
+
+    public void setWhatIAmActuallyDoing(String text){
+        whatIAmActuallyDoing = text;
     }
 
     @Override

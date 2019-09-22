@@ -10,4 +10,6 @@ public class ModEntities {
     public static EntityType<?> ENTITY_AUTO_FARMER = ModUtil._null();
     public static EntityType<?> ENTITY_AUTO_LUMBERJACK = ModUtil._null();
     public static EntityType<?> ENTITY_MINER = ModUtil._null();
+    public static EntityType<?> ENTITY_FISHERMAN = ModUtil._null();
+    public static EntityType<?> CUSTOM_FISHING_BOBBER = ModUtil._null();
 }

@@ -1,12 +1,14 @@
 package krevik.github.io.util;
 
-import com.google.common.collect.ImmutableSet;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.entity.EntityAutoLumberjack;
+import krevik.github.io.entity.EntityFisherman;
+import krevik.github.io.entity.EntityMiner;
 import net.minecraft.block.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.AxeItem;
+import net.minecraft.item.FishingRodItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.tileentity.ChestTileEntity;
@@ -14,11 +16,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
-import org.antlr.v4.runtime.misc.Array2DHashSet;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class FunctionHelper {
 
@@ -1031,5 +1031,215 @@ public class FunctionHelper {
     //--------------------------------------------------------LUMBERJACK END----------------------------------------------------
 
     //--------------------------------------------------------MINER START-------------------------------------------------------
+    public ArrayList<MiningAction> getStairsDigPoses(EntityMiner miner){
+        ArrayList<MiningAction> result = new ArrayList<MiningAction>();
+        int[][][] stairsShape = miner.getStairsPattern();
+        /*for(int x1=10;x1>=0;x1--){
+            for(int x2=10;x2>=0;x2--){
+                for(int x3=10;x3>=0;x3--){
+                        BlockPos toDig = new BlockPos(miner.getHomePosition().getX()+x1,miner.getHomePosition().getY()-10+x2,miner.getHomePosition().getZ()+x3);
+                        if(miner.getPosition().getY()>7&&stairsShape[x1][x2][x3]==1) {
+                            if (miner.getEntityWorld().getBlockState(toDig).getBlock() != Blocks.BEDROCK) {
+                                result.add(toDig);
+                            }
+                        }
+                }
+            }
+        }*/
+
+        int stairsPattern[][][] = miner.getStairsPattern();
+            for(int y=miner.getHomePosition().getY()+2;y>=7;y--){
+                    for(int z=0;z<=3;z++){
+                        for(int x=0;x<=3;x++){
+                            if(y<=miner.getHomePosition().getY()) {
+                                BlockPos toCheck = new BlockPos(miner.getHomePosition().getX() + x, y, miner.getHomePosition().getZ() + z);
+                                MiningAction miningAction=new MiningAction(toCheck,null);
+                                if(stairsPattern[x][y][z]==1 && miner.getEntityWorld().getBlockState(toCheck).getBlock()!=Blocks.COBBLESTONE){
+                                    miningAction.setActionName(MiningAction.ActionType.STAIRS);
+                                }
+                                if(stairsPattern[x][y][z]==0 && !miner.getEntityWorld().isAirBlock(toCheck)){
+                                    miningAction.setActionName(MiningAction.ActionType.DIG);
+                                }
+                                if(miningAction.getAction()!=null) {
+                                    result.add(miningAction);
+                                }
+                            }
+                }
+            }
+        }
+        return result;
+    }
+
+    //-------------------------------------------------------MINER END--------------------------------------------------------------------
+
+    //---------------------------------------------------FISHERMAN START------------------------------------------------------------------
+    public boolean isRodInInventory(EntityFisherman npc){
+        boolean result=false;
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof FishingRodItem){
+                    result=true;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ArrayList<BlockPos> getChestPosesWithRods(EntityFisherman npc){
+        ArrayList<BlockPos> result = new ArrayList<>();
+        int radiusX = npc.getWorkingRadius().getXRadius();
+        int radiusY = npc.getWorkingRadius().getYRadius();
+        int radiusZ = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-radiusX;x<=radiusX;x++){
+            for(int y=-radiusY;y<=radiusY;y++){
+                for(int z=-radiusZ;z<=radiusZ;z++){
+                    BlockPos toCheck = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getTileEntity(toCheck) != null){
+                        if(world.getTileEntity(toCheck) instanceof ChestTileEntity){
+                            ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(toCheck);
+                            for(int c=0;c<16;c++){
+                                if(!chest.getStackInSlot(c).isEmpty()){
+                                    if(chest.getStackInSlot(c).getItem() instanceof FishingRodItem){
+                                        result.add(toCheck);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public boolean isRodEquipped(EntityFisherman npc){
+        boolean result=false;
+        if(npc.getHeldItem(Hand.MAIN_HAND).getItem() instanceof FishingRodItem){
+            result=true;
+        }
+        return result;
+    }
+
+    public ArrayList<ItemWithInventoryIndexEntry> getAvailableRodsInInventory(EntityFisherman npc){
+        ArrayList<ItemWithInventoryIndexEntry> result = new ArrayList<>();
+        for(int c=0;c<npc.getLocalInventory().getSizeInventory();c++){
+            if(!npc.getLocalInventory().getStackInSlot(c).isEmpty()){
+                if(npc.getLocalInventory().getStackInSlot(c).getItem() instanceof FishingRodItem){
+                    ItemWithInventoryIndexEntry itemEntry = new ItemWithInventoryIndexEntry(npc.getLocalInventory().getStackInSlot(c).getItem(),c);
+                    result.add(itemEntry);
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<BlockPos> getSafePositionsNearWater(EntityFisherman npc){
+        ArrayList<BlockPos> result=new ArrayList<>();
+        int xRadius = npc.getWorkingRadius().getXRadius();
+        int yRadius = npc.getWorkingRadius().getYRadius();
+        int zRadius = npc.getWorkingRadius().getZRadius();
+        World world = npc.getEntityWorld();
+        for(int x=-xRadius;x<=xRadius;x++){
+            for(int y=-yRadius;y<=yRadius;y++){
+                for(int z=-zRadius;z<=zRadius;z++) {
+                    BlockPos pos = new BlockPos(npc.getPosition().getX()+x,npc.getPosition().getY()+y,npc.getPosition().getZ()+z);
+                    if(world.getBlockState(pos).getBlock()==Blocks.WATER){
+                        Block AIR = Blocks.AIR;
+                        if(world.getBlockState(pos.west().up().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.west().up()).getBlock()==AIR){
+                                if(world.getBlockState(pos.west()).isSolid()){
+                                    result.add(pos.west().up());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.west().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.west()).getBlock()==AIR){
+                                if(world.getBlockState(pos.west().down()).isSolid()){
+                                    result.add(pos.west());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.east().up().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.east().up()).getBlock()==AIR){
+                                if(world.getBlockState(pos.east()).isSolid()){
+                                    result.add(pos.east().up());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.east().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.east()).getBlock()==AIR){
+                                if(world.getBlockState(pos.east().down()).isSolid()){
+                                    result.add(pos.east());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.south().up().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.south().up()).getBlock()==AIR){
+                                if(world.getBlockState(pos.south()).isSolid()){
+                                    result.add(pos.south().up());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.south().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.south()).getBlock()==AIR){
+                                if(world.getBlockState(pos.south().down()).isSolid()){
+                                    result.add(pos.south());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.north().up().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.north().up()).getBlock()==AIR){
+                                if(world.getBlockState(pos.north()).isSolid()){
+                                    result.add(pos.north().up());
+                                }
+                            }
+                        }
+                        if(world.getBlockState(pos.north().up()).getBlock()==AIR){
+                            if(world.getBlockState(pos.north()).getBlock()==AIR){
+                                if(world.getBlockState(pos.north().down()).isSolid()){
+                                    result.add(pos.north());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public BlockPos getNearestSafePosNearWater(EntityFisherman npc, ArrayList<BlockPos> poses){
+        BlockPos result = poses.get(0);
+        for(BlockPos toCheck:poses){
+            Vec3i entityPos = new Vec3i(Math.abs(npc.getPosition().getX()),Math.abs(npc.getPosition().getY()),Math.abs(npc.getPosition().getZ()));
+            Vec3i toCheckPos = new Vec3i(Math.abs(toCheck.getX()),Math.abs(toCheck.getY()),Math.abs(toCheck.getZ()));
+            Vec3i resultPos = new Vec3i(Math.abs(result.getX()),Math.abs(result.getY()),Math.abs(result.getZ()));
+            if(entityPos.distanceSq(toCheckPos)<entityPos.distanceSq(resultPos)) {
+                result = toCheck;
+            }
+        }
+        return result;
+    }
+
+    public boolean isNearWater(EntityFisherman npc){
+        boolean result=false;
+        int posX=npc.getPosition().getX();
+        int posY=npc.getPosition().getY();
+        int posZ=npc.getPosition().getZ();
+        for(int x=-2;x<=2;x++){
+            for(int y=-2;y<=2;y++){
+                for(int z=-2;z<=2;z++){
+                    BlockPos toCheck =new BlockPos(posX+x,posY+y,posZ+z);
+                    if(npc.getEntityWorld().getBlockState(toCheck).getBlock()==Blocks.WATER){
+                        result=true;
+                    }
+                }
+            }
+        }
+        return result;
+    }
 
 }

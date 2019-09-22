@@ -73,6 +73,7 @@ public class AILumberjackFertilizeSaplings extends Goal {
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setWhatIAmActuallyDoing("Fertilizing");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY(),destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){

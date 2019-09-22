@@ -72,6 +72,7 @@ public class AILumberjackLookForSaplings extends Goal {
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setWhatIAmActuallyDoing("Going for saplings");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){

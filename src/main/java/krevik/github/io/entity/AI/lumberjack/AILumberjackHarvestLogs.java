@@ -80,6 +80,7 @@ public class AILumberjackHarvestLogs extends Goal{
     @Override
     public void tick() {
         if(destinationBlock!=null){
+            NPC.setWhatIAmActuallyDoing("Digging logs");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             NPC.getLookController().setLookPosition(destinationBlock.getX(),destinationBlock.getY(),destinationBlock.getZ(),1,1);
             pathTimer++;

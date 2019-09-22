@@ -2,16 +2,15 @@ package krevik.github.io;
 
 import krevik.github.io.block.BlockAutoFarmerSpawner;
 import krevik.github.io.block.BlockAutoLumberjackSpawner;
-import krevik.github.io.block.BlockMinerSpawner;
-import krevik.github.io.entity.EntityAutoFarmer;
-import krevik.github.io.entity.EntityAutoLumberjack;
-import krevik.github.io.entity.EntityMiner;
+import krevik.github.io.block.BlockFishermanSpawner;
+import krevik.github.io.entity.*;
 import krevik.github.io.init.ModEntities;
 import krevik.github.io.util.ModReference;
 import krevik.github.io.util.ModUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.BlockItem;
@@ -38,16 +37,19 @@ public final class ModEventSubscriber {
         event.getRegistry().registerAll(
                 setup(ModEntities.ENTITY_AUTO_FARMER=EntityType.Builder.<EntityAutoFarmer>create(EntityAutoFarmer::new, EntityClassification.AMBIENT).size(0.6F,1.95F).build(ModReference.MOD_ID+":"+"auto_farmer"),"auto_farmer"),
                 setup(ModEntities.ENTITY_AUTO_LUMBERJACK=EntityType.Builder.<EntityAutoLumberjack>create(EntityAutoLumberjack::new, EntityClassification.AMBIENT).size(0.6F,1.95F).build(ModReference.MOD_ID+":"+"auto_lumberjack"),"auto_lumberjack"),
-                setup(ModEntities.ENTITY_MINER=EntityType.Builder.<EntityMiner>create(EntityMiner::new, EntityClassification.AMBIENT).size(0.6F,1.95F).build(ModReference.MOD_ID+":"+"miner"),"miner")
+                setup(ModEntities.ENTITY_MINER=EntityType.Builder.<EntityMiner>create(EntityMiner::new, EntityClassification.AMBIENT).size(0.6F,1.95F).build(ModReference.MOD_ID+":"+"miner"),"miner"),
+                setup(ModEntities.ENTITY_FISHERMAN=EntityType.Builder.<EntityFisherman>create(EntityFisherman::new, EntityClassification.AMBIENT).size(0.6F,1.95F).build(ModReference.MOD_ID+":"+"fisherman"),"fisherman"),
+                setup(ModEntities.CUSTOM_FISHING_BOBBER=EntityType.Builder.<EntityCustomFishingBobber>create(EntityCustomFishingBobber::new, EntityClassification.MISC).disableSerialization().disableSummoning().size(0.25F, 0.25F).setCustomClientFactory(EntityCustomFishingBobber::new).build(ModReference.MOD_ID+":"+"custom_fishing_bobber"),"custom_fishing_bobber")
         );
     }
+
 
     @SubscribeEvent
     public static void onRegisterBlocks(final RegistryEvent.Register<Block> event){
         event.getRegistry().registerAll(
                 setup(new BlockAutoFarmerSpawner(Block.Properties.create(Material.WOOD).hardnessAndResistance(1f).sound(SoundType.WOOD)),"auto_farmer_spawner"),
                 setup(new BlockAutoLumberjackSpawner(Block.Properties.create(Material.WOOD).hardnessAndResistance(1f).sound(SoundType.WOOD)),"auto_lumberjack_spawner"),
-                setup(new BlockMinerSpawner(Block.Properties.create(Material.WOOD).hardnessAndResistance(1f).sound(SoundType.WOOD)),"miner_spawner")
+                setup(new BlockFishermanSpawner(Block.Properties.create(Material.WOOD).hardnessAndResistance(1f).sound(SoundType.WOOD)),"fisherman_spawner")
                 //setup(new Block(Block.Properties.create(Material.WOOD).hardnessAndResistance(1f).sound(SoundType.WOOD)),"auto_farmer_spawner")
         );
     }

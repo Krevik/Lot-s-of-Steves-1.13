@@ -41,7 +41,7 @@ public class EntityAutoFarmer extends AnimalEntity {
     public ArrayList<Item> ITEMS_OF_INTEREST = new ArrayList<>();
     public ArrayList<Item> SEEDS = new ArrayList<>();
     private WorkingRadius workingRadius;
-
+    private String whatIAmActuallyDoing;
     public EntityAutoFarmer(World world) {
         super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_AUTO_FARMER, world);
         setAIMoveSpeed(1f);
@@ -76,6 +76,14 @@ public class EntityAutoFarmer extends AnimalEntity {
         if(mode==3) result = new ItemStack(Items.POTATO);
         if(mode==4) result = new ItemStack(Items.BEETROOT);
         return result;
+    }
+
+    public String getWhatIAmActuallyDoing() {
+        return whatIAmActuallyDoing;
+    }
+
+    public void setWhatIAmActuallyDoing(String text){
+        whatIAmActuallyDoing = text;
     }
 
     private void handleOperatableItems(){
