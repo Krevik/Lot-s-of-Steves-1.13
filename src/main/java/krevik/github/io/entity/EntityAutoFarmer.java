@@ -43,7 +43,7 @@ public class EntityAutoFarmer extends AnimalEntity {
     private WorkingRadius workingRadius;
     private String whatIAmActuallyDoing;
     public EntityAutoFarmer(World world) {
-        super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_AUTO_FARMER, world);
+        super((EntityType<? extends AnimalEntity>) ModEntities.AUTO_FARMER, world);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
         workingRadius=new WorkingRadius(15,15,15);

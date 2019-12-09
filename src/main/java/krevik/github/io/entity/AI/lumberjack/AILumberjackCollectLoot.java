@@ -73,7 +73,7 @@ public class AILumberjackCollectLoot extends Goal {
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5,destinationBlock.getY()+1,destinationBlock.getZ()+0.5,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsNearDestination()||pathTimer>=getPathTimerTimeout()){
-                if(!pickableLoot.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                /*if(!pickableLoot.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory())){
                     ItemStack stackToPickup = pickableLoot.get(0).getItem();
                     if(!stackToPickup.isEmpty()){
                         if(helper.isFreeSlotInInventory(NPC.getLocalInventory())){
@@ -81,12 +81,24 @@ public class AILumberjackCollectLoot extends Goal {
                         }
                     }
                 }
-                destinationBlock=null;
-                pathTimer=0;
                 if(pickableLoot.get(0)!=null) {
                     pickableLoot.get(0).remove();
                     pickableLoot.remove(0);
-                }
+                }*/
+                //if(pathTimer>=getPathTimerTimeout()){
+                    for(ItemEntity pickable: pickableLoot){
+                        ItemStack stackToPickup = pickable.getItem();
+                        if(!stackToPickup.isEmpty()){
+                            if(helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                                NPC.getLocalInventory().addItem(stackToPickup);
+                              }
+                        }
+                        pickable.remove();
+                    }
+                    pickableLoot.clear();
+                //}
+                destinationBlock=null;
+                pathTimer=0;
             }
         }else{
             destinationBlock = pickableLoot.get(0).getPosition();

@@ -9,3 +9,8 @@ improved chest searching alghoritm
 0.16
 added lumberjack
 small fixes in auto farmer (especially with looking for seeds task)
+-------------------------
+0.18
+improved lumberjack AI
+
+

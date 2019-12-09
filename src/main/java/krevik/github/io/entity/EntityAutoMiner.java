@@ -1,16 +1,33 @@
 package krevik.github.io.entity;
 
-import krevik.github.io.entity.AI.miner.GoalDoStairs;
+
+import com.google.common.collect.ImmutableSet;
+import krevik.github.io.entity.AI.farmer.*;
+import krevik.github.io.entity.AI.lumberjack.EntityAILookForTools;
+import krevik.github.io.entity.AI.miner.AIMinerEquipTool;
+import krevik.github.io.entity.AI.miner.AIMinerLookForTools;
 import krevik.github.io.init.ModEntities;
+import krevik.github.io.init.ModItems;
+import krevik.github.io.util.WorkingRadius;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.horse.DonkeyEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IWorld;
@@ -19,106 +36,72 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-public class EntityMiner extends AnimalEntity {
+public class EntityAutoMiner extends AnimalEntity {
 
     private final Inventory localInventory = new Inventory(64);
-    private int[][][] stairsPattern = new int[4][256][4];
-    public EntityMiner(World world) {
-        super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_MINER, world);
+    private static final DataParameter<Integer> MODE = EntityDataManager.createKey(krevik.github.io.entity.EntityAutoMiner.class, DataSerializers.VARINT);
+
+    private WorkingRadius workingRadius;
+    private String whatIAmActuallyDoing;
+    public EntityAutoMiner(World world) {
+        super((EntityType<? extends AnimalEntity>) ModEntities.AUTO_MINER, world);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
+        workingRadius=new WorkingRadius(15,15,15);
     }
 
-    public EntityMiner(EntityType<EntityMiner> entityAutoFarmerEntityType, World world) {
-        super(entityAutoFarmerEntityType, world);
+    public EntityAutoMiner(EntityType<krevik.github.io.entity.EntityAutoMiner> ent, World world) {
+        super(ent, world);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
+        workingRadius=new WorkingRadius(15,15,15);
     }
 
-    private void clearAndInitializeStairsPattern(){
-        stairsPattern = new int[4][256][4];
-        /*for(int i1=0;i1<=10;i1++){
-            for(int i2=0;i2<=10;i2++){
-                for(int i3=0;i3<=10;i3++){
-                    stairsPattern[i1][i2][i3]=0;
-                }
-            }
-        }*/
-        for(int i1=0;i1<=3;i1++){
-            for(int i2=0;i2<256;i2++){
-                for(int i3=0;i3<=3;i3++){
-                    stairsPattern[i1][i2][i3]=0;
-                }
-            }
-        }
-        makeHolePattern();
-    }
-
-    public int[][][] getStairsPattern() {
-        clearAndInitializeStairsPattern();
-        return stairsPattern;
-    }
-
-    private ArrayList<Integer> getActualYRangeStairs(int height){
-        ArrayList<Integer> result = new ArrayList<Integer>();
-        for(int x=0;x<5;x++){
-            result.add(height+x);
-        }
+    public ItemStack getItemStackToRender(int mode){
+        ItemStack result = new ItemStack(Blocks.COBBLESTONE);
+        if(mode==0) result = new ItemStack(Blocks.BARRIER);
+        if(mode==1) result = new ItemStack(Blocks.COBBLESTONE);
+        if(mode==2) result = new ItemStack(Items.CARROT);
         return result;
     }
 
-    private void makeStairsPatternX(){
-        for(int i1=0;i1<=10;i1++){
-            for(int i2=0;i2<=10;i2++){
-                ArrayList<Integer> actualYRange = getActualYRangeStairs(i1);
-                for(int i3=0;i3<=10;i3++){
-                   if(actualYRange.contains(i2)){
-                       stairsPattern[i1][i2][i3]=1;
-                   }
-                }
-            }
-        }
+    public String getWhatIAmActuallyDoing() {
+        return whatIAmActuallyDoing;
     }
 
-    private void makeHolePattern(){
-        int switcher=1;
-            for(int y=255;y>8;y--){
-                switcher++;
-                if(switcher>=13){
-                    switcher=1;
-                }
-                for(int z=0;z<=3;z++){
-                    for(int x=0;x<=3;x++){
-                    if(shouldPlaceStairBlockAt(switcher,x,z)) {
-                        stairsPattern[x][y][z] = 1;
-                    }
-                }
-            }
-        }
+    public void setWhatIAmActuallyDoing(String text){
+        whatIAmActuallyDoing = text;
     }
-
-    private boolean shouldPlaceStairBlockAt(int switcher, int x,int z){
-        boolean result=false;
-        if(switcher==1&&x==0&&z==0) result=true;
-        if(switcher==2&&x==1&&z==0) result=true;
-        if(switcher==3&&x==2&&z==0) result=true;
-        if(switcher==4&&x==3&&z==0) result=true;
-        if(switcher==5&&x==3&&z==1) result=true;
-        if(switcher==6&&x==3&&z==2) result=true;
-        if(switcher==7&&x==3&&z==3) result=true;
-        if(switcher==8&&x==2&&z==3) result=true;
-        if(switcher==9&&x==1&&z==3) result=true;
-        if(switcher==10&&x==0&&z==3) result=true;
-        if(switcher==11&&x==0&&z==2) result=true;
-        if(switcher==12&&x==0&&z==1) result=true;
-
-        return result;
-    }
-
 
     @Override
     protected void registerData() {
         super.registerData();
+        this.getDataManager().register(MODE, 0);
+    }
+
+    public int getMode()
+    {
+        return MathHelper.clamp(getDataManager().get(MODE), 0, 16);
+    }
+
+    public void setMode(int meta) {
+        getDataManager().set(MODE, meta);
+    }
+
+    @Override
+    public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand) {
+        if(!world.isRemote) {
+            if (getMode() < 2) {
+                setMode(getMode() + 1);
+            } else {
+                setMode(0);
+            }
+            if(getMode()==1){
+
+            }
+        }
+
+        return ActionResultType.SUCCESS;
     }
 
     @Override
@@ -142,6 +125,10 @@ public class EntityMiner extends AnimalEntity {
         return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     }
 
+    public WorkingRadius getWorkingRadius(){
+        return workingRadius;
+    }
+
     @Override
     public boolean canDespawn(double distanceToClosestPlayer) {
         return false;
@@ -155,7 +142,8 @@ public class EntityMiner extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1,new GoalDoStairs(this));
+        goalSelector.addGoal(4,new AIMinerLookForTools(this));
+        goalSelector.addGoal(4,new AIMinerEquipTool(this));
     }
 
     public Inventory getLocalInventory() {
@@ -178,6 +166,7 @@ public class EntityMiner extends AnimalEntity {
     @Override
     public void writeAdditional(CompoundNBT tag) {
         super.writeAdditional(tag);
+        tag.putInt("Mode", getMode());
         ListNBT nbttaglist = new ListNBT();
         for(int i = 0; i < this.localInventory.getSizeInventory(); ++i) {
             ItemStack itemstack = this.localInventory.getStackInSlot(i);
@@ -195,6 +184,7 @@ public class EntityMiner extends AnimalEntity {
     @Override
     public void readAdditional(CompoundNBT tag) {
         super.readAdditional(tag);
+        setMode(tag.getInt("Mode"));
         ListNBT nbttaglist = tag.getList("Inventory", 10);
 
         for(int i = 0; i < nbttaglist.size(); ++i) {

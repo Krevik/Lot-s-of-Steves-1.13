@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import sun.reflect.generics.tree.Tree;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -105,6 +106,14 @@ public class AILumberjackHarvestLogs extends Goal{
                         //destroy block
                         if(actualDiggingTime>=desiredDiggingTime){
                             world.destroyBlock(positionToHarvest,true);
+                            ArrayList<BlockPos> TreeLogPoses = new ArrayList<BlockPos>();
+                            TreeLogPoses=helper.getAllTreeLogBlocksNew(NPC,positionToHarvest);
+                            if(!TreeLogPoses.isEmpty()){
+                                for(BlockPos pos:TreeLogPoses){
+                                    world.destroyBlock(pos,true);
+                                }
+                            }
+
                             destinationBlock=null;
                             pathTimer=0;
                             //damage item experimental
@@ -114,7 +123,7 @@ public class AILumberjackHarvestLogs extends Goal{
                                     p_220045_0_.sendBreakAnimation(EquipmentSlotType.MAINHAND);
                                 });
                             }
-                            LOGS_POSITIONS.remove(helper.getNearestTree(NPC,LOGS_POSITIONS));
+                            LOGS_POSITIONS.clear();
                             actualDiggingTime=0;
                             desiredDiggingTime=0;
                             //try to replant

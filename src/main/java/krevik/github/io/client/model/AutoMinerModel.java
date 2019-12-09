@@ -3,7 +3,6 @@ package krevik.github.io.client.model;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Items;
@@ -12,7 +11,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class ModelFisherman<T extends LivingEntity> extends BipedModel<T> {
+public class AutoMinerModel<T extends LivingEntity> extends BipedModel<T> {
 
     public final RendererModel bipedLeftArmwear;
     public final RendererModel bipedRightArmwear;
@@ -23,7 +22,7 @@ public class ModelFisherman<T extends LivingEntity> extends BipedModel<T> {
     private final RendererModel bipedDeadmau5Head;
     private final boolean smallArms;
 
-    public ModelFisherman(float modelSize, boolean smallArmsIn) {
+    public AutoMinerModel(float modelSize, boolean smallArmsIn) {
         super(modelSize, 0.0F, 64, 64);
         this.smallArms = smallArmsIn;
         this.bipedDeadmau5Head = new RendererModel(this, 24, 0);
@@ -122,7 +121,6 @@ public class ModelFisherman<T extends LivingEntity> extends BipedModel<T> {
         }
 
     }
-
 
     public void setVisible(boolean visible) {
         super.setVisible(visible);

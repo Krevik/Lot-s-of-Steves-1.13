@@ -1,8 +1,8 @@
-package krevik.github.io.entity.AI.fisherman;
+package krevik.github.io.entity.AI.miner;
 
 import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoLumberjack;
-import krevik.github.io.entity.EntityFisherman;
+import krevik.github.io.entity.EntityAutoMiner;
 import krevik.github.io.util.FunctionHelper;
 import krevik.github.io.util.ItemWithInventoryIndexEntry;
 import net.minecraft.entity.ai.goal.Goal;
@@ -13,14 +13,14 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-public class EntityAIEquipRod extends Goal {
+public class AIMinerEquipTool extends Goal {
 
     private int runDelay;
     private int actualDelay;
-    private EntityFisherman NPC;
+    private EntityAutoMiner NPC;
     FunctionHelper helper;
     World world;
-    public EntityAIEquipRod(EntityFisherman npc){
+    public AIMinerEquipTool(EntityAutoMiner npc){
         NPC=npc;
         runDelay=100;
         actualDelay=0;
@@ -33,7 +33,7 @@ public class EntityAIEquipRod extends Goal {
     public boolean shouldExecute() {
         actualDelay++;
         if(actualDelay>=runDelay){
-            if(helper.isRodInInventory(NPC)&&!helper.isRodEquipped(NPC)){
+            if(helper.areToolsInInventory(NPC)&&!helper.isToolEquipped(NPC)){
                 return true;
             }
         }
@@ -43,7 +43,7 @@ public class EntityAIEquipRod extends Goal {
     @Override
     public boolean shouldContinueExecuting() {
         actualDelay=0;
-        return !helper.isRodEquipped(NPC) && helper.isRodInInventory(NPC);
+        return !helper.isToolEquipped(NPC) && helper.areToolsInInventory(NPC);
     }
 
     @Override
@@ -53,10 +53,10 @@ public class EntityAIEquipRod extends Goal {
 
     @Override
     public void tick() {
-        NPC.setWhatIAmActuallyDoing("Equipping fishing rod");
-        if(!helper.isRodEquipped(NPC)){
-            if(helper.isRodInInventory(NPC)){
-                ArrayList<ItemWithInventoryIndexEntry> availableTools = helper.getAvailableRodsInInventory(NPC);
+        NPC.setWhatIAmActuallyDoing("Equipping tool");
+        if(!helper.isToolEquipped(NPC)){
+            if(helper.areToolsInInventory(NPC)){
+                ArrayList<ItemWithInventoryIndexEntry> availableTools = helper.getAvailableToolsInInventory(NPC);
                 ItemStack stackToEquip = NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex());
                 NPC.setHeldItem(Hand.MAIN_HAND,stackToEquip);
                 //NPC.getLocalInventory().getStackInSlot(availableTools.get(0).getInventoryIndex()).setCount(0);

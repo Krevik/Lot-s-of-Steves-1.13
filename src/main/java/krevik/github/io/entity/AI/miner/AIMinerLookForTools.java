@@ -1,13 +1,13 @@
-package krevik.github.io.entity.AI.fisherman;
+package krevik.github.io.entity.AI.miner;
 
 import krevik.github.io.LotsOfSteves;
 import krevik.github.io.entity.EntityAutoLumberjack;
-import krevik.github.io.entity.EntityFisherman;
+import krevik.github.io.entity.EntityAutoMiner;
 import krevik.github.io.util.FunctionHelper;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.item.AxeItem;
-import net.minecraft.item.FishingRodItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.PickaxeItem;
 import net.minecraft.tileentity.ChestTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -15,22 +15,22 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-public class GoalLookForRod extends Goal {
+public class AIMinerLookForTools extends Goal {
 
     private int runDelay;
     private int actualDelay;
-    private EntityFisherman NPC;
+    private EntityAutoMiner NPC;
     FunctionHelper helper;
-    ArrayList<BlockPos> chestsWithRod;
+    ArrayList<BlockPos> chestsWithTools;
     BlockPos destinationBlock;
     int pathTimer;
     World world;
-    public GoalLookForRod(EntityFisherman npc){
+    public AIMinerLookForTools(EntityAutoMiner npc){
         NPC=npc;
         runDelay=100;
         actualDelay=0;
-        helper=LotsOfSteves.getHelper();
-        chestsWithRod =new ArrayList<>();
+        helper= LotsOfSteves.getHelper();
+        chestsWithTools =new ArrayList<>();
         this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE, Flag.LOOK, Flag.TARGET));
         destinationBlock=null;
         pathTimer=0;
@@ -41,9 +41,9 @@ public class GoalLookForRod extends Goal {
     public boolean shouldExecute() {
         actualDelay++;
         if(actualDelay>=runDelay){
-            if(!helper.isRodInInventory(NPC)&& !helper.isRodEquipped(NPC) && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                chestsWithRod = helper.getChestPosesWithRods(NPC);
-                if(!chestsWithRod.isEmpty()){
+            if(!helper.areToolsInInventory(NPC) && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                chestsWithTools = helper.getChestPosesWithTools(NPC);
+                if(!chestsWithTools.isEmpty()){
                     return true;
                 }
             }
@@ -55,7 +55,7 @@ public class GoalLookForRod extends Goal {
     @Override
     public boolean shouldContinueExecuting() {
         actualDelay=0;
-        return !chestsWithRod.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory());
+        return !chestsWithTools.isEmpty()&&helper.isFreeSlotInInventory(NPC.getLocalInventory());
     }
 
     @Override
@@ -70,16 +70,16 @@ public class GoalLookForRod extends Goal {
     @Override
     public void tick() {
         if(destinationBlock!=null){
-            NPC.setWhatIAmActuallyDoing("Going for a rod! YAY!");
+            NPC.setWhatIAmActuallyDoing("Going for a Pickaxe! YAY!");
             NPC.getNavigator().tryMoveToXYZ(destinationBlock.getX()+0.5D,destinationBlock.getY()+1D,destinationBlock.getZ()+0.5D,NPC.getAIMoveSpeed());
             pathTimer++;
             if(getIsAboveDestination()||pathTimer>=getPathTimerTimeout()){
-                if(world.getTileEntity(chestsWithRod.get(0))!=null){
-                    if(world.getTileEntity(chestsWithRod.get(0)) instanceof ChestTileEntity && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
-                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestsWithRod.get(0));
+                if(world.getTileEntity(chestsWithTools.get(0))!=null){
+                    if(world.getTileEntity(chestsWithTools.get(0)) instanceof ChestTileEntity && helper.isFreeSlotInInventory(NPC.getLocalInventory())){
+                        ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(chestsWithTools.get(0));
                         for(int c=0;c<16;c++){
                             if(!chest.getStackInSlot(c).isEmpty()){
-                                if(chest.getStackInSlot(c).getItem() instanceof FishingRodItem){
+                                if(chest.getStackInSlot(c).getItem() instanceof PickaxeItem){
                                     ItemStack stackToTransfer = chest.getStackInSlot(c);
                                     NPC.getLocalInventory().addItem(stackToTransfer);
                                     chest.getStackInSlot(c).setCount(0);
@@ -92,10 +92,10 @@ public class GoalLookForRod extends Goal {
 
                 destinationBlock=null;
                 pathTimer=0;
-                chestsWithRod.remove(0);
+                chestsWithTools.remove(0);
             }
         }else{
-            destinationBlock = chestsWithRod.get(0);
+            destinationBlock = chestsWithTools.get(0);
         }
     }
 

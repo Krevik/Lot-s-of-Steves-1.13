@@ -45,9 +45,10 @@ public class EntityAutoLumberjack extends AnimalEntity {
     private String whatIAmActuallyDoing;
 
     public EntityAutoLumberjack(World p_i48568_2_) {
-        super((EntityType<? extends AnimalEntity>) ModEntities.ENTITY_AUTO_LUMBERJACK, p_i48568_2_);
+        super((EntityType<? extends AnimalEntity>) ModEntities.AUTO_LUMBERJACK, p_i48568_2_);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
+        stepHeight=2;
         workingRadius=new WorkingRadius(15,15,15);
         SAPLINGS.addAll(ImmutableSet.of(Items.ACACIA_SAPLING, Items.BIRCH_SAPLING,
                 Items.DARK_OAK_SAPLING, Items.JUNGLE_SAPLING,
@@ -66,6 +67,7 @@ public class EntityAutoLumberjack extends AnimalEntity {
         super(entityAutoLumberjackEntityType, world);
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
+        stepHeight=2;
         workingRadius=new WorkingRadius(15,15,15);
         SAPLINGS.addAll(ImmutableSet.of(Items.ACACIA_SAPLING, Items.BIRCH_SAPLING,
                 Items.DARK_OAK_SAPLING, Items.JUNGLE_SAPLING,
@@ -99,11 +101,11 @@ public class EntityAutoLumberjack extends AnimalEntity {
         goalSelector.addGoal(4,new EntityAIEquipTool(this));
         goalSelector.addGoal(5,new AILumberjackCollectLoot(this));
         goalSelector.addGoal(5,new AILumberjackHarvestLogs(this));
-        goalSelector.addGoal(6,new AILumberjackDeliverExcessToChest(this));
+        goalSelector.addGoal(5,new AILumberjackDeliverExcessToChest(this));
         goalSelector.addGoal(8,new AILumberjackFertilizeSaplings(this));
-        goalSelector.addGoal(5,new AILumberjackLookForBonemeal(this));
-        goalSelector.addGoal(4,new AILumberjackLookForSaplings(this));
-        goalSelector.addGoal(6,new AILumberjackPlantSaplings(this));
+        goalSelector.addGoal(7,new AILumberjackLookForBonemeal(this));
+        goalSelector.addGoal(7,new AILumberjackLookForSaplings(this));
+        goalSelector.addGoal(7,new AILumberjackPlantSaplings(this));
     }
 
     @Override
@@ -132,6 +134,36 @@ public class EntityAutoLumberjack extends AnimalEntity {
     public void tick() {
         super.tick();
         setAIMoveSpeed(1f);
+    }
+
+    @Override
+    protected void damageEntity(DamageSource dmgSource, float p_70665_2_) {
+        super.damageEntity(dmgSource, p_70665_2_);
+        if(dmgSource==DamageSource.IN_WALL){
+            BlockPos target = getFreeSpaceAround();
+            this.setPosition(target.getX(),target.getY(),target.getZ());
+        }
+    }
+
+    private BlockPos getFreeSpaceAround(){
+        BlockPos result = new BlockPos(getPosition());
+        ArrayList<BlockPos> posTable = new ArrayList<>();
+        for(int x=-10;x<=10;x++){
+            for(int y=-10;y<=10;y++){
+                for(int z=-10;z<=10;z++){
+                    BlockPos toAdd = new BlockPos(getPosition().getX()+x,getPosition().getY()+y,getPosition().getZ()+z);
+                    posTable.add(toAdd);
+                }
+            }
+        }
+
+        BlockPos randomPos = posTable.get(rand.nextInt(posTable.size()));
+        while(!world.isAirBlock(randomPos)&&!world.isAirBlock(randomPos.up())){
+            randomPos=posTable.get(rand.nextInt(posTable.size()));
+        }
+        result=randomPos;
+
+        return result;
     }
 
     @Nullable
