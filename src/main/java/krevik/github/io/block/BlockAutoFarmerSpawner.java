@@ -1,7 +1,6 @@
 package krevik.github.io.block;
 
 import krevik.github.io.entity.EntityAutoFarmer;
-import krevik.github.io.entity.EntityAutoLumberjack;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
@@ -22,6 +21,7 @@ public class BlockAutoFarmerSpawner extends Block {
             entity.setPosition(pos.getX()+0.5f,pos.getY()+0.5f,pos.getZ()+0.5f);
             worldIn.addEntity(entity);
             ((EntityAutoFarmer) entity).setHomePosAndDistance(new BlockPos(entity),15);
+            ((EntityAutoFarmer) entity).setOwnerId(player.getUniqueID());
         }
     }
 }

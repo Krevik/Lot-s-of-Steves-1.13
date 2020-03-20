@@ -1,4 +1,10 @@
 {
   "block.lots_of_steves.auto_farmer_spawner": "Auto Farmer Spawner",
-  "block.lots_of_steves.auto_lumberjack_spawner": "Auto Lumberjack Spawner"
+  "block.lots_of_steves.auto_lumberjack_spawner": "Auto Lumberjack Spawner",
+  
+  "farmer.gui.update": "Save & Update",
+  "farmer.gui.work_speed": "Work Speed (scanning) (1-10)",
+  "farmer.gui.working.radius.x": "Working Radius X",
+  "farmer.gui.working.radius.y": "Working Radius Y",
+  "farmer.gui.working.radius.z": "Working Radius Z"
 }

@@ -1,14 +1,15 @@
 package krevik.github.io.entity;
 
 import krevik.github.io.init.ModEntities;
-import krevik.github.io.init.ModItems;
-import krevik.github.io.util.NPCUtils.AI.farmer.*;
+import krevik.github.io.util.NPCUtils.AI.animal_farmer.AIScanForAnimals;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataParameter;
@@ -29,61 +30,28 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
-import krevik.github.io.networking.PacketsHandler;
-import krevik.github.io.networking.messages.farmer.ClientOpenFarmerGui;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-
-
-public class EntityAutoFarmer extends EntityNPC{
+public class EntityAnimalFarmer extends EntityNPC{
     protected static final DataParameter<Optional<UUID>> OWNER_UNIQUE_ID = EntityDataManager.createKey(TameableEntity.class, DataSerializers.OPTIONAL_UNIQUE_ID);
 
     private Inventory localInventory;
     private ArrayList<Item> GENERAL_ALLOWED_ITEMS;
+    private ArrayList<LivingEntity> scanned_Living_Entities;
+    private ArrayList<LivingEntity> allowed_entities;
     private BlockPos workingRadius;
-    private boolean cropRotation;
-    private boolean shouldUseBonemeal;
     private int workSpeed = 1;
-    private AILookForSeeds lookForSeedsGoal = new AILookForSeeds(this);
-    private AILookForBonemeal lookForBonemealGoal = new AILookForBonemeal(this);
-    private AIFarmerCollectLoot collectLootGoal = new AIFarmerCollectLoot(this);
-    private AIFertilizePlants fertilizePlantsGoal = new AIFertilizePlants(this);
-    private AIDeliverExcessToChest deliverExcessToChestGoal = new AIDeliverExcessToChest(this);
-    private AIHarvestPlants harvestPlantsGoal = new AIHarvestPlants(this);
-    private AIPlantStandardCrops plantStandardCropsGoal = new AIPlantStandardCrops(this);
-    private AIPlantSugarCane plantSugarCane = new AIPlantSugarCane(this);
-    private AIPlantNetherWarts plantNetherWarts = new AIPlantNetherWarts(this);
-    private AIPlantCocoaBeans plantCocoaBeans = new AIPlantCocoaBeans(this);
 
+
+    private AIScanForAnimals scanForAnimalsGoal = new AIScanForAnimals(this);
     private void initGoals(){
-        goalSelector.addGoal(5,lookForSeedsGoal);
-        goalSelector.addGoal(5,lookForBonemealGoal);
-        goalSelector.addGoal(5,collectLootGoal);
-        goalSelector.addGoal(6,fertilizePlantsGoal);
-        goalSelector.addGoal(5,deliverExcessToChestGoal);
-        goalSelector.addGoal(5,harvestPlantsGoal);
-        goalSelector.addGoal(5,plantStandardCropsGoal);
-        goalSelector.addGoal(5,plantSugarCane);
-        goalSelector.addGoal(5,plantNetherWarts);
-        goalSelector.addGoal(5,plantCocoaBeans);
-
+        this.goalSelector.addGoal(5,scanForAnimalsGoal);
     }
 
     public void updateTasks(){
-        lookForSeedsGoal.updateRunDelay();
-        lookForBonemealGoal.updateRunDelay();
-        collectLootGoal.updateRunDelay();
-        fertilizePlantsGoal.updateRunDelay();
-        deliverExcessToChestGoal.updateRunDelay();
-        harvestPlantsGoal.updateRunDelay();
-        plantStandardCropsGoal.updateRunDelay();
-        plantSugarCane.updateRunDelay();
-        plantNetherWarts.updateRunDelay();
-        plantCocoaBeans.updateRunDelay();
+
     }
 
-    public EntityAutoFarmer(World world) {
+
+    public EntityAnimalFarmer(World world) {
         super(ModEntities.AUTO_FARMER, world);
         workSpeed=1;
         initInventory();
@@ -92,11 +60,9 @@ public class EntityAutoFarmer extends EntityNPC{
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
         workingRadius=new BlockPos(15,15,15);
-        cropRotation=true;
-        shouldUseBonemeal=true;
     }
 
-    public EntityAutoFarmer(EntityType<EntityAutoFarmer> entityAutoFarmerEntityType, World world) {
+    public EntityAnimalFarmer(EntityType<EntityAnimalFarmer> entityAutoFarmerEntityType, World world) {
         super(entityAutoFarmerEntityType, world);
         workSpeed=1;
         initInventory();
@@ -105,8 +71,6 @@ public class EntityAutoFarmer extends EntityNPC{
         setAIMoveSpeed(1f);
         setCanPickUpLoot(false);
         workingRadius=new BlockPos(15,15,15);
-        cropRotation=true;
-        shouldUseBonemeal=true;
         workSpeed=1;
     }
 
@@ -114,6 +78,28 @@ public class EntityAutoFarmer extends EntityNPC{
         if(GENERAL_ALLOWED_ITEMS==null) {
             GENERAL_ALLOWED_ITEMS = new ArrayList<>();
         }
+        if(scanned_Living_Entities==null) {
+            scanned_Living_Entities = new ArrayList<>();
+        }
+        if(allowed_entities==null) {
+            allowed_entities = new ArrayList<>();
+        }
+    }
+
+    public ArrayList<LivingEntity> getScanned_Living_Entities() {
+        return scanned_Living_Entities;
+    }
+
+    public void setScanned_Living_Entities(ArrayList<LivingEntity> scanned_Living_Entities) {
+        this.scanned_Living_Entities = scanned_Living_Entities;
+    }
+
+    public ArrayList<LivingEntity> getAllowed_entities() {
+        return allowed_entities;
+    }
+
+    public void setAllowed_entities(ArrayList<LivingEntity> allowed_entities) {
+        this.allowed_entities = allowed_entities;
     }
 
     private void initInventory(){
@@ -134,24 +120,10 @@ public class EntityAutoFarmer extends EntityNPC{
         if(!world.isRemote) {
             if(isOwner(player)) {
                 if (player instanceof ServerPlayerEntity) {
-                    int additionalStacks=0;
-                    if(shouldUseBonemeal){
-                        additionalStacks++;
-                    }
-                    if(cropRotation){
-                        additionalStacks++;
-                    }
-                    ItemStack stacksToAllow[] = new ItemStack[getGENERAL_ALLOWED_ITEMS().size()+additionalStacks];
+                    ItemStack stacksToAllow[] = new ItemStack[getGENERAL_ALLOWED_ITEMS().size()];
                     for(int c=0;c<getGENERAL_ALLOWED_ITEMS().size();c++){
                         stacksToAllow[c]=new ItemStack(getGENERAL_ALLOWED_ITEMS().get(c));
                     }
-                    if(shouldUseBonemeal){
-                        stacksToAllow[stacksToAllow.length-1] = new ItemStack(Items.BONE_MEAL);
-                    }
-                    if(cropRotation){
-                        stacksToAllow[stacksToAllow.length-2] = new ItemStack(ModItems.MULTI_CROP);
-                    }
-                    PacketsHandler.sendTo(new ClientOpenFarmerGui(getPosition(),getWorkSpeed(),getWorkingRadius(),stacksToAllow), (ServerPlayerEntity) player);
                 }
             }
         }
@@ -179,23 +151,6 @@ public class EntityAutoFarmer extends EntityNPC{
         this.GENERAL_ALLOWED_ITEMS = items;
     }
 
-
-
-    public boolean isShouldUseBonemeal() {
-        return shouldUseBonemeal;
-    }
-
-    public void setShouldUseBonemeal(boolean shouldUseBonemeal) {
-        this.shouldUseBonemeal = shouldUseBonemeal;
-    }
-
-    public boolean getCropRotation(){
-        return this.cropRotation;
-    }
-
-    public void setCropRotation(boolean trueorfalse){
-        this.cropRotation=trueorfalse;
-    }
 
     @Override
     public void onDeath(DamageSource cause) {
@@ -277,6 +232,8 @@ public class EntityAutoFarmer extends EntityNPC{
         return entityIn == this.getOwner();
     }
 
+
+
     @Override
     public void writeAdditional(CompoundNBT tag) {
         super.writeAdditional(tag);
@@ -302,8 +259,6 @@ public class EntityAutoFarmer extends EntityNPC{
         tag.putDouble("homeX",getHomePosition().getX());
         tag.putDouble("homeY",getHomePosition().getY());
         tag.putDouble("homeZ",getHomePosition().getZ());
-        tag.putBoolean("crop_rotation", cropRotation);
-        tag.putBoolean("should_use_bonemeal", shouldUseBonemeal);
 
         if (this.getOwnerId() == null) {
             tag.putString("OwnerUUID", "");
@@ -340,8 +295,6 @@ public class EntityAutoFarmer extends EntityNPC{
         }
 
         setHomePosAndDistance(new net.minecraft.util.math.BlockPos(tag.getDouble("homeX"),tag.getDouble("homeY"),tag.getDouble("homeZ")),30);
-        cropRotation=tag.getBoolean("crop_rotation");
-        shouldUseBonemeal = tag.getBoolean("should_use_bonemeal");
 
         String s;
         if (tag.contains("OwnerUUID", 8)) {
