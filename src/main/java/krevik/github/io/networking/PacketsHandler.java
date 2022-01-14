@@ -3,13 +3,13 @@ package krevik.github.io.networking;
 import krevik.github.io.networking.messages.farmer.ClientOpenFarmerGui;
 import krevik.github.io.networking.messages.farmer.ClientUpdateFarmerGeneralAllowedItems;
 import krevik.github.io.networking.messages.farmer.ServerUpdateFarmerGeneralAllowedItems;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 /**
  * thank you @williewillus
@@ -38,16 +38,16 @@ public final class PacketsHandler
         HANDLER.sendToServer(msg);
     }
 
-    public static void sendTo(Object msg, ServerPlayerEntity player)
+    public static void sendTo(Object msg, ServerPlayer player)
     {
         if (!(player instanceof FakePlayer))
         {
-            HANDLER.sendTo(msg, player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
+            HANDLER.sendTo(msg, player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
         }
     }
 
     public static void sendToAll(Object msg){
-        for (ServerPlayerEntity player : ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers())
+        for (ServerPlayer player : ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers())
         {
             sendTo(msg,player);
         }

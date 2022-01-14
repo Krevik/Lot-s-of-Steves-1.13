@@ -1,14 +1,19 @@
 package krevik.github.io.networking.messages.farmer;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.math.Vector3d;
 import krevik.github.io.entity.EntityAutoFarmer;
 import krevik.github.io.networking.PacketsHandler;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.*;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +21,14 @@ import java.util.function.Supplier;
 
 public class ServerUpdateFarmerGeneralAllowedItems  {
 
-    private net.minecraft.util.math.BlockPos farmerPos;
+    private BlockPos farmerPos;
     private int stacksSize;
     private ItemStack[] stacks;
     boolean shouldUseBonemeal;
     boolean shouldUseCropRotation;
     int workSpeed;
-    net.minecraft.util.math.BlockPos workingRadius;
-    public ServerUpdateFarmerGeneralAllowedItems(net.minecraft.util.math.BlockPos pos, int workSpeed, net.minecraft.util.math.BlockPos workingRadius, int stacksSize, ArrayList<ItemStack> stacks, boolean shouldUseBonemeal,
+    BlockPos workingRadius;
+    public ServerUpdateFarmerGeneralAllowedItems(BlockPos pos, int workSpeed, BlockPos workingRadius, int stacksSize, ArrayList<ItemStack> stacks, boolean shouldUseBonemeal,
                                                  boolean shouldUseCropRotation){
         farmerPos=pos;
         this.workSpeed = workSpeed;
@@ -69,7 +74,7 @@ public class ServerUpdateFarmerGeneralAllowedItems  {
         public static void handle(final ServerUpdateFarmerGeneralAllowedItems message, Supplier<NetworkEvent.Context> ctx)
         {
             ctx.get().enqueueWork(() -> {
-                net.minecraft.util.math.BlockPos clickPos = message.farmerPos;
+                BlockPos clickPos = message.farmerPos;
                 int searchRadius = 5;
                 List<Entity> entities = ctx.get().getSender().getEntity().getEntityWorld().getEntitiesWithinAABB(EntityAutoFarmer.class,new AxisAlignedBB(clickPos.getX()-searchRadius,clickPos.getY()-searchRadius,clickPos.getZ()-searchRadius,clickPos.getX()+searchRadius,clickPos.getY()+searchRadius,clickPos.getZ()+searchRadius));
                 if(entities!=null){
@@ -77,9 +82,9 @@ public class ServerUpdateFarmerGeneralAllowedItems  {
                         Entity closestEntity=entities.get(0);
                         for(Entity entity:entities){
                             if(entity instanceof EntityAutoFarmer){
-                                Vec3d closestEntityPos = new Vec3d(closestEntity.getPosX(),closestEntity.getPosY(),closestEntity.getPosZ());
-                                Vec3d entityPos = new Vec3d(entity.getPosX(),entity.getPosY(),entity.getPosZ());
-                                Vec3d clickPosVec = new Vec3d(clickPos.getX(),clickPos.getY(),clickPos.getZ());
+                                Vector3d closestEntityPos = new Vector3d(closestEntity.getPosX(),closestEntity.getPosY(),closestEntity.getPosZ());
+                                Vector3d entityPos = new Vector3d(entity.getPosX(),entity.getPosY(),entity.getPosZ());
+                                Vector3d clickPosVec = new Vector3d(clickPos.getX(),clickPos.getY(),clickPos.getZ());
                                 if(entityPos.distanceTo(clickPosVec) <= closestEntityPos.distanceTo(clickPosVec)){
                                     closestEntity = entity;
                                 }

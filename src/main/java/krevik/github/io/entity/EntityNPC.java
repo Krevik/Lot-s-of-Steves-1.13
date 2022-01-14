@@ -1,58 +1,51 @@
 package krevik.github.io.entity;
 
-import net.minecraft.entity.*;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.SimpleContainer;
 import javax.annotation.Nullable;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 
-public class EntityNPC extends AnimalEntity{
-    private Inventory localInventory;
+public class EntityNPC extends Animal {
+    private SimpleContainer localInventory;
     private BlockPos workingRadius;
+    private BlockPos homePosition;
 
-    public EntityNPC(EntityType<? extends EntityNPC> entityType, World world) {
+    public EntityNPC(EntityType<? extends EntityNPC> entityType, Level world) {
         super(entityType, world);
         initInventory();
-        setAIMoveSpeed(1f);
+        setSpeed(1f);
         setCanPickUpLoot(false);
         workingRadius=new BlockPos(15,15,15);
     }
 
     private void initInventory(){
-        localInventory = new Inventory(64);
+        localInventory = new SimpleContainer(64);
     }
 
     public void updateTasks(){
     }
 
     @Override
-    public void onDeath(DamageSource cause) {
-        super.onDeath(cause);
-        for(int c=0;c<=getLocalInventory().getSizeInventory();c++){
-            if(!getLocalInventory().getStackInSlot(c).isEmpty()){
-                ItemEntity itemEntity = new ItemEntity(world,getPosition().getY(),getPosition().getY(),getPosition().getZ());
-                itemEntity.setItem(getLocalInventory().getStackInSlot(c));
-                itemEntity.setPosition(getPosition().getX()+0.5,getPosition().getY()+2,getPosition().getZ()+0.5);
-                itemEntity.setMotion(new Vec3d(-0.5+getRNG().nextFloat(),-0.1f,-0.5+getRNG().nextFloat()));
-                world.addEntity(itemEntity);
-            }
-        }
+    public void die(DamageSource cause) {
+        super.die(cause);
     }
 
     @Nullable
-    @Override
-    public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
-        setHomePosAndDistance(getPosition(),30);
-        return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor par1, DifficultyInstance par2, MobSpawnType par3, @Nullable SpawnGroupData par4, @Nullable CompoundTag par5) {
+        homePosition=new BlockPos(position());
+        return super.finalizeSpawn(par1, par2, par3, par4, par5);
     }
 
     public BlockPos getWorkingRadius(){
@@ -60,14 +53,14 @@ public class EntityNPC extends AnimalEntity{
     }
 
     @Override
-    public boolean canDespawn(double distanceToClosestPlayer) {
-        return false;
+    public void checkDespawn() {
+        //we do not want despawning
     }
 
     @Override
     public void tick() {
         super.tick();
-        setAIMoveSpeed(1f);
+        setSpeed(1f);
     }
 
     @Override
@@ -75,51 +68,37 @@ public class EntityNPC extends AnimalEntity{
 
     }
 
-    public Inventory getLocalInventory() {
+    public SimpleContainer getLocalInventory() {
         return this.localInventory;
     }
 
-    @Override
-    protected void registerAttributes() {
-        super.registerAttributes();
-        this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
-        this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.3000000417232513D);
+    public static AttributeSupplier.Builder createMobAttributes() {
+        return LivingEntity.createLivingAttributes().add(Attributes.FOLLOW_RANGE, 16.0D).add(Attributes.ATTACK_KNOCKBACK)
+                .add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.MOVEMENT_SPEED, 0.3);
     }
 
-    @Nullable
     @Override
-    public AgeableEntity createChild(AgeableEntity entityAgeable) {
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.put("Inventory", this.localInventory.createTag());
+
+        tag.putDouble("homeX",homePosition.getX());
+        tag.putDouble("homeY",homePosition.getY());
+        tag.putDouble("homeZ",homePosition.getZ());
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        this.localInventory.fromTag(tag.getList("Inventory", 10));
+        homePosition = new BlockPos(tag.getDouble("homeX"),tag.getDouble("homeY"),tag.getDouble("homeZ"));
+    }
+
+
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public AgeableMob getBreedOffspring(ServerLevel p_146743_, AgeableMob p_146744_) {
         return null;
-    }
-
-    @Override
-    public void writeAdditional(CompoundNBT tag) {
-        super.writeAdditional(tag);
-        ListNBT nbttaglist = new ListNBT();
-        for(int i = 0; i < this.localInventory.getSizeInventory(); ++i) {
-            ItemStack itemstack = this.localInventory.getStackInSlot(i);
-            if (!itemstack.isEmpty()) {
-                nbttaglist.add(itemstack.write(new CompoundNBT()));
-            }
-        }
-        tag.put("Inventory", nbttaglist);
-
-        tag.putDouble("homeX",getHomePosition().getX());
-        tag.putDouble("homeY",getHomePosition().getY());
-        tag.putDouble("homeZ",getHomePosition().getZ());
-    }
-
-    @Override
-    public void readAdditional(CompoundNBT tag) {
-        super.readAdditional(tag);
-        ListNBT nbttaglist = tag.getList("Inventory", 10);
-        for(int i = 0; i < nbttaglist.size(); ++i) {
-            ItemStack itemstack = ItemStack.read(nbttaglist.getCompound(i));
-            if (!itemstack.isEmpty()) {
-                this.localInventory.addItem(itemstack);
-            }
-        }
-
-        setHomePosAndDistance(new net.minecraft.util.math.BlockPos(tag.getDouble("homeX"),tag.getDouble("homeY"),tag.getDouble("homeZ")),30);
     }
 }

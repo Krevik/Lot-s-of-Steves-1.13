@@ -12,7 +12,15 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -52,7 +60,7 @@ public final class ModEventSubscriber {
                 setup(new Item(new Item.Properties()), "multi_sapling")
         );
         for (final Block block : ModUtil.getModEntries(ForgeRegistries.BLOCKS)) {
-            registry.register(setup(new BlockItem(block, new Item.Properties().group(ItemGroup.REDSTONE)), block.getRegistryName()));
+            registry.register(setup(new BlockItem(block, new Item.Properties().tab(CreativeModeTab.TAB_REDSTONE)), block.getRegistryName()));
         }
     }
 
